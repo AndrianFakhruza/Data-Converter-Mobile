@@ -1026,10 +1026,10 @@
         function createChart(labels, data, type, bulan, tahun, chartType) {
             const ctx = document.getElementById('dataChart').getContext('2d');
             const title = type === 'desa' ? 
-                `DATA JUMLAH PEMERIKSAAN LABORATORIUM PERDESA BULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}` :
-                `DATA PEMERIKSAAN LABORATORIUM BULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}`;
+                `DATA JUMLAH PEMERIKSAAN LABORATORIUM PERDESA\nBULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}` :
+                `DATA PEMERIKSAAN LABORATORIUM\nBULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}`;
             
-            document.getElementById('grafik-info').textContent = title;
+            document.getElementById('grafik-info').textContent = title.replace('\n', ' ');
             
             const maxValue = Math.max(...data);
             const average = Math.round(data.reduce((a, b) => a + b, 0) / data.length);
@@ -1040,9 +1040,9 @@
             
             if (currentChart) currentChart.destroy();
             
-            // Single color scheme
-            const singleColor = 'rgba(102, 126, 234, 0.8)';
-            const borderColor = 'rgba(102, 126, 234, 1)';
+            // Professional color scheme
+            const singleColor = '#4A90E2';
+            const borderColor = '#357ABD';
             
             currentChart = new Chart(ctx, {
                 type: chartType,
@@ -1055,7 +1055,9 @@
                             generateColors(data.length).bg : singleColor,
                         borderColor: chartType === 'pie' || chartType === 'doughnut' ? 
                             generateColors(data.length).border : borderColor,
-                        borderWidth: 2
+                        borderWidth: 1,
+                        barThickness: 'flex',
+                        maxBarThickness: 40
                     }]
                 },
                 options: {
@@ -1063,78 +1065,72 @@
                     maintainAspectRatio: false,
                     layout: {
                         padding: {
-                            top: 60,    // Margin atas
-                            bottom: 120, // Margin bawah untuk label vertikal
-                            left: 60,   // Margin kiri
-                            right: 60   // Margin kanan
+                            top: 40,
+                            bottom: 100,
+                            left: 70,
+                            right: 50
                         }
                     },
                     plugins: {
                         title: {
                             display: true,
-                            text: title,
+                            text: title.split('\n'),
                             font: { 
-                                size: 20, 
-                                weight: 'bold',
+                                size: 16, 
+                                weight: '600',
                                 family: 'Arial, sans-serif'
                             },
-                            color: '#333',
+                            color: '#000',
                             padding: { 
                                 top: 10,
-                                bottom: 40 
+                                bottom: 25 
                             }
                         },
                         legend: {
-                            display: ['pie', 'doughnut'].includes(chartType),
-                            labels: {
-                                font: {
-                                    size: 12,
-                                    weight: 'bold'
-                                }
-                            }
+                            display: false
                         },
                         datalabels: {
                             display: true,
-                            color: '#333',
+                            color: '#000',
                             font: {
-                                weight: 'bold',
-                                size: 12,
+                                weight: '600',
+                                size: 11,
                                 family: 'Arial, sans-serif'
                             },
                             anchor: 'end',
                             align: 'top',
+                            offset: 4,
                             formatter: function(value) {
-                                return value.toLocaleString();
+                                return value.toString();
                             }
                         }
                     },
                     scales: ['bar', 'line'].includes(chartType) ? {
                         y: {
                             beginAtZero: true,
+                            max: Math.ceil(maxValue * 1.15), // Add 15% space above highest bar
                             ticks: {
+                                stepSize: Math.ceil(maxValue / 10),
                                 font: { 
-                                    size: 12,
-                                    weight: 'bold',
+                                    size: 11,
+                                    weight: '500',
                                     family: 'Arial, sans-serif'
                                 },
-                                color: '#333',
+                                color: '#000',
                                 callback: function(value) {
-                                    return value.toLocaleString();
+                                    return value.toString();
                                 }
                             },
                             grid: {
-                                color: 'rgba(0, 0, 0, 0.1)',
-                                lineWidth: 1
+                                color: '#E0E0E0',
+                                lineWidth: 1,
+                                drawBorder: true,
+                                borderColor: '#000',
+                                borderWidth: 2
                             },
-                            title: {
-                                display: true,
-                                text: 'Jumlah Pemeriksaan',
-                                font: {
-                                    size: 14,
-                                    weight: 'bold',
-                                    family: 'Arial, sans-serif'
-                                },
-                                color: '#333'
+                            border: {
+                                color: '#000',
+                                width: 2
                             }
                         },
                         x: {
@@ -1142,11 +1138,11 @@
                                 maxRotation: 90,
                                 minRotation: 90,
                                 font: { 
-                                    size: 11,
-                                    weight: 'bold',
+                                    size: 10,
+                                    weight: '500',
                                     family: 'Arial, sans-serif'
                                 },
-                                color: '#333',
+                                color: '#000',
                                 callback: function(value, index) {
                                     return this.getLabelForValue(value);
                                 }
@@ -1154,22 +1150,21 @@
                             grid: {
                                 display: false
                             },
-                            title: {
-                                display: true,
-                                text: 'Nama Desa',
-                                font: {
-                                    size: 14,
-                                    weight: 'bold',
-                                    family: 'Arial, sans-serif'
-                                },
-                                color: '#333',
-                                padding: { top: 20 }
+                            border: {
+                                color: '#000',
+                                width: 2
                             }
                         }
                     } : {},
+                    elements: {
+                        bar: {
+                            borderSkipped: false,
+                            borderRadius: 0
+                        }
+                    },
                     animation: {
-                        duration: 1500,
-                        easing: 'easeInOutQuart'
+                        duration: 1000,
+                        easing: 'easeOutQuart'
                     }
                 }
             });
