@@ -1019,7 +1019,9 @@
         
         function createChart(labels, data, type, bulan, tahun, chartType) {
             const ctx = document.getElementById('dataChart').getContext('2d');
-            const title = `${type === 'desa' ? 'Data Desa' : 'Data Lab'} - ${getNamaBulan(bulan)} ${tahun}`;
+            const title = type === 'desa' ? 
+                `DATA JUMLAH PEMERIKSAAN LABORATORIUM PERDESA BULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}` :
+                `DATA PEMERIKSAAN LABORATORIUM BULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}`;
             
             document.getElementById('grafik-info').textContent = title;
             
@@ -1291,9 +1293,26 @@
         
         document.getElementById('downloadBtn').addEventListener('click', function() {
             if (currentChart) {
+                // Create a temporary canvas with white background
+                const originalCanvas = document.getElementById('dataChart');
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                // Set canvas dimensions same as original
+                tempCanvas.width = originalCanvas.width;
+                tempCanvas.height = originalCanvas.height;
+                
+                // Fill with white background
+                tempCtx.fillStyle = 'white';
+                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                
+                // Draw the original chart on top
+                tempCtx.drawImage(originalCanvas, 0, 0);
+                
+                // Download the temp canvas
                 const link = document.createElement('a');
                 link.download = `chart_${currentDataType}_${currentTahun}_${currentBulan}.png`;
-                link.href = document.getElementById('dataChart').toDataURL();
+                link.href = tempCanvas.toDataURL('image/png');
                 link.click();
                 showNotification('Chart berhasil didownload!', 'success');
             }
