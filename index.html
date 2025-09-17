@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Converter Web Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container-fluid { max-width: 1200px; padding: 10px; }
+        
+        /* Header */
+        .header {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        /* Cards */
+        .card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border: none;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+            text-align: center;
+        }
+        
+        .card-body { padding: 20px; }
+        
+        /* Menu Grid */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .menu-item {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        
+        .menu-item:hover {
+            transform: translateY(-5px);
+            color: white;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .menu-item:nth-child(2) {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+        
+        .menu-item:nth-child(3) {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+        
+        .menu-item .icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            padding: 12px 15px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        /* Buttons */
+        .btn {
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #fa709a, #fee140);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+        }
+        
+        /* Tables */
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .table {
+            margin: 0;
+            background: white;
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 10px;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .table tbody td {
+            padding: 12px 10px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .table tbody tr:hover {
+            background-color: rgba(102, 126, 234, 0.05);
+        }
+        
+        /* Search Box */
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            padding-left: 45px;
+            border-radius: 25px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667eea;
+        }
+        
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #667eea;
+        }
+        
+        .summary-card .number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .summary-card .label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        /* Chart Container */
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+        }
+        
+        /* Progress Bar */
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+        
+        .notification.error {
+            background: linear-gradient(135deg, #fa709a, #fee140);
+        }
+        
+        .notification.info {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        /* Badges */
+        .badge {
+            padding: 8px 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .badge-month {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container-fluid { padding: 5px; }
+            
+            .header h1 { font-size: 1.5rem; }
+            .header { padding: 15px; }
+            
+            .card-body { padding: 15px; }
+            
+            .menu-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .menu-item {
+                padding: 20px 15px;
+            }
+            
+            .menu-item .icon { font-size: 2rem; }
+            
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .summary-card {
+                padding: 15px 10px;
+            }
+            
+            .summary-card .number { font-size: 1.4rem; }
+            
+            .btn {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+                margin: 5px 0;
+                width: 100%;
+            }
+            
+            .table thead th, .table tbody td {
+                padding: 8px 6px;
+                font-size: 0.85rem;
+            }
+            
+            .chart-wrapper { height: 300px; }
+            
+            .notification {
+                right: 10px;
+                left: 10px;
+                transform: translateY(-100%);
+                max-width: none;
+            }
+            
+            .notification.show {
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1.3rem; }
+            
+            .summary-grid { grid-template-columns: 1fr; }
+            
+            .form-control, .form-select {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .table-responsive {
+                font-size: 0.8rem;
+            }
+            
+            .chart-wrapper { height: 250px; }
+        }
+        
+        /* Utility Classes */
+        .page { display: none; }
+        .page.active { display: block; }
+        .text-center { text-align: center; }
+        .mb-3 { margin-bottom: 1rem; }
+        .mt-3 { margin-top: 1rem; }
+        .d-none { display: none; }
+        
+        /* Loading */
+        .loading { opacity: 0.7; pointer-events: none; }
+        
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="header fade-in">
+            <h1><i class="fas fa-chart-line"></i> Data Converter Web Pro</h1>
+            <p>Sistem Laporan Bulanan Mobile-Friendly</p>
+        </div>
+        
+        <!-- Main Menu -->
+        <div id="main-page" class="page active">
+            <div class="card fade-in">
+                <div class="card-header">
+                    <h2 class="card-title">Dashboard Utama</h2>
+                </div>
+                <div class="card-body">
+                    <div class="summary-grid" id="mainSummary">
+                        <div class="summary-card">
+                            <div class="number" id="totalDesaData">0</div>
+                            <div class="label">Data Desa</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="number" id="totalPemeriksaanData">0</div>
+                            <div class="label">Data Lab</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="number" id="totalMonths">0</div>
+                            <div class="label">Bulan Aktif</div>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-grid">
+                        <a href="#" class="menu-item" onclick="showPage('select-date-desa-page')">
+                            <div class="icon"><i class="fas fa-map-marked-alt"></i></div>
+                            <div class="label">Data Desa</div>
+                        </a>
+                        <a href="#" class="menu-item" onclick="showPage('select-date-pemeriksaan-page')">
+                            <div class="icon"><i class="fas fa-microscope"></i></div>
+                            <div class="label">Data Lab</div>
+                        </a>
+                        <a href="#" class="menu-item" onclick="showPage('generate-page')">
+                            <div class="icon"><i class="fas fa-chart-pie"></i></div>
+                            <div class="label">Visualisasi</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Select Date for Desa -->
+        <div id="select-date-desa-page" class="page">
+            <div class="card fade-in">
+                <div class="card-header">
+                    <h2 class="card-title">Pilih Periode Data Desa</h2>
+                </div>
+                <div class="card-body">
+                    <form id="selectDateDesaForm">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-alt"></i> Bulan</label>
+                            <select class="form-select" id="desaBulan" required>
+                                <option value="">-- Pilih Bulan --</option>
+                                <option value="01">Januari</option>
+                                <option value="02">Februari</option>
+                                <option value="03">Maret</option>
+                                <option value="04">April</option>
+                                <option value="05">Mei</option>
+                                <option value="06">Juni</option>
+                                <option value="07">Juli</option>
+                                <option value="08">Agustus</option>
+                                <option value="09">September</option>
+                                <option value="10">Oktober</option>
+                                <option value="11">November</option>
+                                <option value="12">Desember</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar"></i> Tahun</label>
+                            <input type="number" class="form-control" id="desaTahun" value="2025" min="2020" max="2030" required>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-arrow-right"></i> Lanjutkan
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="showPage('main-page')">
+                                <i class="fas fa-home"></i> Dashboard
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Input Desa Data -->
+        <div id="input-desa-page" class="page">
+            <div class="card fade-in">
+                <div class="card-header">
+                    <h2 class="card-title">Input Data Desa</h2>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <span class="badge badge-month">
+                            Periode: <span id="current-bulan-desa"></span> <span id="current-tahun-desa"></span>
+                        </span>
+                    </div>
+                    
+                    <div class="summary-grid d-none" id="desaSummary">
+                        <div class="summary-card">
+                            <div class="number" id="totalDesaCount">0</div>
+                            <div class="label">Total Desa</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="number" id="filledDesaCount">0</div>
+                            <div class="label">Terisi</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="number" id="totalDesaValue">0</div>
+                            <div class="label">Total</div>
+                        </div>
+                    </div>
+                    
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" class="form-control" id="search-desa" placeholder="Cari desa..." onkeyup="searchTable('desa')">
+                    </div>
+                    
+                    <div class="progress">
+                        <div class="progress-bar" id="desaProgress" style="width: 0%"></div>
+                    </div>
+                    
+                    <form id="desaForm">
+                        <div class="table-responsive">
+                            <table class="table" id="desa-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nama Desa</th>
+                                        <th>Jumlah</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="desa-table-body"></tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Simpan
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="clearDesaForm()">
+                                <i class="fas fa-eraser"></i> Reset
+                            </button>
+                            <button type="button" class="btn btn-warning" onclick="autoFillDesa()">
+                                <i class="fas fa-magic"></i> Sample
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="showPage('select-date-desa-page')">
+                                <i class="fas fa-arrow-left"></i> Kembali
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Select Date for Pemeriksaan -->
+        <div id="select-date-pemeriksaan-page" class="page">
+            <div class="card fade-in">
+                <div class="card-header">
+                    <h2 class="card-title">Pilih Periode Data Lab</h2>
+                </div>
+                <div class="card-body">
+                    <form id="selectDatePemeriksaanForm">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-alt"></i> Bulan</label>
+                            <select class="form-select" id="pemeriksaanBulan" required>
+                                <option value="">-- Pilih Bulan --</option>
+                                <option value="01">Januari</option>
+                                <option value="02">Februari</option>
+                                <option value="03">Maret</option>
+                                <option value="04">April</option>
+                                <option value="05">Mei</option>
+                                <option value="06">Juni</option>
+                                <option value="07">Juli</option>
+                                <option value="08">Agustus</option>
+                                <option value="09">September</option>
+                                <option value="10">Oktober</option>
+                                <option value="11">November</option>
+                                <option value="12">Desember</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar"></i> Tahun</label>
+                            <input type="number" class="form-control" id="pemeriksaanTahun" value="2025" min="2020" max="2030" required>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-arrow-right"></i> Lanjutkan
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="showPage('main-page')">
+                                <i class="fas fa-home"></i> Dashboard
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Input Pemeriksaan Data -->
+        <div id="input-pemeriksaan-page" class="page">
+            <div class="card fade-in">
+                <div class="card-header">
+                    <h2 class="card-title">Input Data Lab</h2>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <span class="badge badge-month">
+                            Periode: <span id="current-bulan-pemeriksaan"></span> <span id="current-tahun-pemeriksaan"></span>
+                        </span>
+                    </div>
+                    
+                    <div class="summary-grid d-none" id="pemeriksaanSummary">
+                        <div class="summary-card">
+                            <div class="number" id="totalPemeriksaanCount">0</div>
+                            <div class="label">Jenis Test</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="number" id="filledPemeriksaanCount">0</div>
+                            <div class="label">Terisi</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="number" id="totalPemeriksaanValue">0</div>
+                            <div class="label">Total</div>
+                        </div>
+                    </div>
+                    
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" class="form-control" id="search-pemeriksaan" placeholder="Cari pemeriksaan..." onkeyup="searchTable('pemeriksaan')">
+                    </div>
+                    
+                    <div class="progress">
+                        <div class="progress-bar" id="pemeriksaanProgress" style="width: 0%"></div>
+                    </div>
+                    
+                    <form id="pemeriksaanForm">
+                        <div class="table-responsive">
+                            <table class="table" id="pemeriksaan-table">
+                                <thead>
+                                    <tr>
+                                        <th>Jenis Pemeriksaan</th>
+                                        <th>Jumlah</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pemeriksaan-table-body"></tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Simpan
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="clearPemeriksaanForm()">
+                                <i class="fas fa-eraser"></i> Reset
+                            </button>
+                            <button type="button" class="btn btn-warning" onclick="autoFillPemeriksaan()">
+                                <i class="fas fa-magic"></i> Sample
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="showPage('select-date-pemeriksaan-page')">
+                                <i class="fas fa-arrow-left"></i> Kembali
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Generate Chart -->
+        <div id="generate-page" class="page">
+            <div class="card fade-in">
+                <div class="card-header">
+                    <h2 class="card-title">Visualisasi Data</h2>
+                </div>
+                <div class="card-body">
+                    <div class="summary-grid">
+                        <div class="summary-card">
+                            <div class="number" id="availableDesaMonths">0</div>
+                            <div class="label">Data Desa</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="number" id="availablePemeriksaanMonths">0</div>
+                            <div class="label">Data Lab</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="number" id="totalCharts">0</div>
+                            <div class="label">Charts</div>
+                        </div>
+                    </div>
+                    
+                    <form id="generateForm">
+                        <div class="form-group">
+                            <label><i class="fas fa-chart-bar"></i> Jenis Data</label>
+                            <select class="form-select" id="dataType" required onchange="updateAvailableMonths()">
+                                <option value="">-- Pilih Data --</option>
+                                <option value="desa">Data Desa</option>
+                                <option value="pemeriksaan">Data Lab</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-alt"></i> Bulan</label>
+                            <select class="form-select" id="generateBulan" required>
+                                <option value="">-- Pilih Bulan --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar"></i> Tahun</label>
+                            <input type="number" class="form-control" id="generateTahun" value="2025" min="2020" max="2030" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-chart-pie"></i> Tipe Chart</label>
+                            <select class="form-select" id="chartType" required>
+                                <option value="">-- Pilih Chart --</option>
+                                <option value="bar">Bar Chart</option>
+                                <option value="pie">Pie Chart</option>
+                                <option value="line">Line Chart</option>
+                                <option value="doughnut">Doughnut Chart</option>
+                            </select>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-chart-bar"></i> Generate Chart
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="showPage('main-page')">
+                                <i class="fas fa-home"></i> Dashboard
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chart Display -->
+        <div id="grafik-page" class="page">
+            <div class="card fade-in">
+                <div class="card-header">
+                    <h2 class="card-title">Visualisasi Data</h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-center mb-3" id="grafik-info"></p>
+                    
+                    <div class="summary-grid" id="chartSummary">
+                        <div class="summary-card">
+                            <div class="number" id="chartDataPoints">0</div>
+                            <div class="label">Data Points</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="number" id="chartMaxValue">0</div>
+                            <div class="label">Tertinggi</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="number" id="chartAverage">0</div>
+                            <div class="label">Rata-rata</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-wrapper">
+                            <canvas id="dataChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button id="downloadBtn" class="btn btn-warning">
+                            <i class="fas fa-download"></i> Download PNG
+                        </button>
+                        <button id="downloadExcelBtn" class="btn btn-success">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </button>
+                        <button class="btn btn-secondary" onclick="showPage('generate-page')">
+                            <i class="fas fa-arrow-left"></i> Kembali
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data arrays
+        const desaList = ["SIDO MULYO", "CEMPEDAK", "BAYU", "BL. TALON", "BUKET", "COT MERBO", "COT RHEU", "LHOKJOK", "MEUNASAH DAYAH", "PULO BARAT", "MEUNASAH KUMBANG", "Panton Rayek 1", "KR. SEPENG", "BL. GURAH", "CEMECET", "KR. MANYANG", "SEUNEBOK DRIEN", "BL. ADO", "BL. ARA", "COT SEUTUI", "ALU RAMBE", "MULING MEUCAT", "KRESEK", "PULO RAYEUK", "LANGKUTA", "BL. RIEK", "FASKES LAIN", "BABAH LUENG", "GUHA ULHEU", "KR. SENONG", "MC. BAHAGIA", "MEUNASAH KULAM", "KD. KRUENG", "COT SEMIYONG", "PULO IBOH", "KEUDE BLANG ARA", "MEURIYA", "P. RAYEUK 2", "MULING MANYANG", "SAWEUK"];
+        
+        const pemeriksaanList = ["CHOLESTEROL", "KADAR GULA DARAH", "TBC", "SIPILIS", "HIV", "HBSAG", "WIDAL", "ASAM URAT", "DARAH RUTIN", "URINALISA", "GOLONGAN DARAH", "CAMPAK", "MALARIA", "TRIGLISERIDA", "DBD", "SGOT", "SGPT", "T.PROTEIN", "R.FAKTOR", "CREATININT", "UREA", "ALBUMIN", "BIL.DIRECT"];
+        
+        // Global variables
+        let currentChart = null;
+        let currentBulan = "";
+        let currentTahun = "";
+        let currentDataType = "";
+        let currentChartType = "bar";
+        let storedData = { desa: {}, pemeriksaan: {} };
+        let appStats = { totalRecords: 0, chartsGenerated: 0 };
+        
+        // Initialize app
+        function initializeApp() {
+            loadStoredData();
+            updateMainSummary();
+        }
+        
+        // Storage functions
+        function loadStoredData() {
+            try {
+                const data = localStorage.getItem('storedData');
+                const stats = localStorage.getItem('appStats');
+                if (data) storedData = JSON.parse(data);
+                if (stats) appStats = JSON.parse(stats);
+            } catch (e) {
+                console.warn('Failed to load data');
+            }
+        }
+        
+        function saveData() {
+            try {
+                localStorage.setItem('storedData', JSON.stringify(storedData));
+                localStorage.setItem('appStats', JSON.stringify(appStats));
+            } catch (e) {
+                console.warn('Failed to save data');
+            }
+        }
+        
+        // Page navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            if (pageId === 'main-page') updateMainSummary();
+            else if (pageId === 'generate-page') updateGeneratePage();
+        }
+        
+        // Search functionality
+        function searchTable(type) {
+            const input = document.getElementById(`search-${type}`);
+            const filter = input.value.toUpperCase();
+            const rows = document.querySelectorAll(`#${type}-table-body tr`);
+            
+            let visible = 0;
+            rows.forEach(row => {
+                const text = row.cells[0].textContent.toUpperCase();
+                const show = text.includes(filter);
+                row.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+            
+            if (filter) showNotification(`${visible} hasil ditemukan`, 'info');
+        }
+        
+        // Table functions
+        function fillDesaTable() {
+            const tbody = document.getElementById('desa-table-body');
+            const bulanTahun = `${currentBulan}-${currentTahun}`;
+            const existingData = storedData.desa[bulanTahun] || {};
+            
+            tbody.innerHTML = '';
+            desaList.forEach(desa => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td><strong>${desa}</strong></td>
+                    <td><input type="number" class="form-control form-control-sm" name="${desa}" value="${existingData[desa] || '0'}" min="0" oninput="updateDesaSummary()"></td>
+                    <td><span class="badge ${(existingData[desa] || 0) > 0 ? 'bg-success' : 'bg-secondary'}">${(existingData[desa] || 0) > 0 ? 'Terisi' : 'Kosong'}</span></td>
+                `;
+            });
+            
+            updateDesaSummary();
+            document.getElementById('desaSummary').classList.remove('d-none');
+        }
+        
+        function fillPemeriksaanTable() {
+            const tbody = document.getElementById('pemeriksaan-table-body');
+            const bulanTahun = `${currentBulan}-${currentTahun}`;
+            const existingData = storedData.pemeriksaan[bulanTahun] || {};
+            
+            tbody.innerHTML = '';
+            pemeriksaanList.forEach(item => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td><strong>${item}</strong></td>
+                    <td><input type="number" class="form-control form-control-sm" name="${item}" value="${existingData[item] || '0'}" min="0" oninput="updatePemeriksaanSummary()"></td>
+                    <td><span class="badge ${(existingData[item] || 0) > 0 ? 'bg-success' : 'bg-secondary'}">${(existingData[item] || 0) > 0 ? 'Terisi' : 'Kosong'}</span></td>
+                `;
+            });
+            
+            updatePemeriksaanSummary();
+            document.getElementById('pemeriksaanSummary').classList.remove('d-none');
+        }
+        
+        // Summary updates
+        function updateDesaSummary() {
+            const inputs = document.querySelectorAll('#desa-table-body input');
+            let total = 0, filled = 0;
+            
+            inputs.forEach(input => {
+                const value = parseInt(input.value) || 0;
+                total += value;
+                if (value > 0) filled++;
+                
+                const badge = input.closest('tr').querySelector('.badge');
+                badge.className = `badge ${value > 0 ? 'bg-success' : 'bg-secondary'}`;
+                badge.textContent = value > 0 ? 'Terisi' : 'Kosong';
+            });
+            
+            document.getElementById('totalDesaCount').textContent = desaList.length;
+            document.getElementById('filledDesaCount').textContent = filled;
+            document.getElementById('totalDesaValue').textContent = total.toLocaleString();
+            document.getElementById('desaProgress').style.width = `${(filled / desaList.length) * 100}%`;
+        }
+        
+        function updatePemeriksaanSummary() {
+            const inputs = document.querySelectorAll('#pemeriksaan-table-body input');
+            let total = 0, filled = 0;
+            
+            inputs.forEach(input => {
+                const value = parseInt(input.value) || 0;
+                total += value;
+                if (value > 0) filled++;
+                
+                const badge = input.closest('tr').querySelector('.badge');
+                badge.className = `badge ${value > 0 ? 'bg-success' : 'bg-secondary'}`;
+                badge.textContent = value > 0 ? 'Terisi' : 'Kosong';
+            });
+            
+            document.getElementById('totalPemeriksaanCount').textContent = pemeriksaanList.length;
+            document.getElementById('filledPemeriksaanCount').textContent = filled;
+            document.getElementById('totalPemeriksaanValue').textContent = total.toLocaleString();
+            document.getElementById('pemeriksaanProgress').style.width = `${(filled / pemeriksaanList.length) * 100}%`;
+        }
+        
+        function updateMainSummary() {
+            const desaCount = Object.keys(storedData.desa).length;
+            const labCount = Object.keys(storedData.pemeriksaan).length;
+            const totalMonths = new Set([...Object.keys(storedData.desa), ...Object.keys(storedData.pemeriksaan)]).size;
+            
+            document.getElementById('totalDesaData').textContent = desaCount;
+            document.getElementById('totalPemeriksaanData').textContent = labCount;
+            document.getElementById('totalMonths').textContent = totalMonths;
+        }
+        
+        function updateGeneratePage() {
+            document.getElementById('availableDesaMonths').textContent = Object.keys(storedData.desa).length;
+            document.getElementById('availablePemeriksaanMonths').textContent = Object.keys(storedData.pemeriksaan).length;
+            document.getElementById('totalCharts').textContent = appStats.chartsGenerated;
+        }
+        
+        // Auto-fill functions
+        function autoFillDesa() {
+            document.querySelectorAll('#desa-table-body input').forEach(input => {
+                input.value = Math.floor(Math.random() * 100) + 1;
+            });
+            updateDesaSummary();
+            showNotification('Sample data desa berhasil di-generate!', 'success');
+        }
+        
+        function autoFillPemeriksaan() {
+            document.querySelectorAll('#pemeriksaan-table-body input').forEach(input => {
+                input.value = Math.floor(Math.random() * 200) + 1;
+            });
+            updatePemeriksaanSummary();
+            showNotification('Sample data lab berhasil di-generate!', 'success');
+        }
+        
+        // Clear functions
+        function clearDesaForm() {
+            document.querySelectorAll('#desa-table-body input').forEach(input => input.value = '0');
+            updateDesaSummary();
+            showNotification('Form desa di-reset!', 'info');
+        }
+        
+        function clearPemeriksaanForm() {
+            document.querySelectorAll('#pemeriksaan-table-body input').forEach(input => input.value = '0');
+            updatePemeriksaanSummary();
+            showNotification('Form lab di-reset!', 'info');
+        }
+        
+        // Chart functions
+        function updateAvailableMonths() {
+            const dataType = document.getElementById('dataType').value;
+            const select = document.getElementById('generateBulan');
+            
+            select.innerHTML = '<option value="">-- Pilih Bulan --</option>';
+            
+            if (!dataType) return;
+            
+            const months = new Set();
+            Object.keys(storedData[dataType]).forEach(key => {
+                months.add(key.split('-')[0]);
+            });
+            
+            const monthNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            
+            Array.from(months).sort().forEach(month => {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = monthNames[parseInt(month)];
+                select.appendChild(option);
+            });
+        }
+        
+        function getNamaBulan(bulan) {
+            const names = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            return names[parseInt(bulan)];
+        }
+        
+        function createChart(labels, data, type, bulan, tahun, chartType) {
+            const ctx = document.getElementById('dataChart').getContext('2d');
+            const title = `${type === 'desa' ? 'Data Desa' : 'Data Lab'} - ${getNamaBulan(bulan)} ${tahun}`;
+            
+            document.getElementById('grafik-info').textContent = title;
+            
+            const maxValue = Math.max(...data);
+            const average = Math.round(data.reduce((a, b) => a + b, 0) / data.length);
+            
+            document.getElementById('chartDataPoints').textContent = data.length;
+            document.getElementById('chartMaxValue').textContent = maxValue.toLocaleString();
+            document.getElementById('chartAverage').textContent = average.toLocaleString();
+            
+            if (currentChart) currentChart.destroy();
+            
+            const colors = generateColors(data.length);
+            
+            currentChart = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Jumlah',
+                        data: data,
+                        backgroundColor: colors.bg,
+                        borderColor: colors.border,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title,
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            display: ['pie', 'doughnut'].includes(chartType)
+                        }
+                    },
+                    scales: ['bar', 'line'].includes(chartType) ? {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    } : {}
+                }
+            });
+            
+            appStats.chartsGenerated++;
+            saveData();
+        }
+        
+        function generateColors(count) {
+            const baseColors = [
+                'rgba(102, 126, 234, 0.8)',
+                'rgba(247, 147, 26, 0.8)',
+                'rgba(76, 201, 240, 0.8)',
+                'rgba(255, 107, 107, 0.8)',
+                'rgba(67, 233, 123, 0.8)'
+            ];
+            
+            const bg = [], border = [];
+            for (let i = 0; i < count; i++) {
+                const color = baseColors[i % baseColors.length];
+                bg.push(color);
+                border.push(color.replace('0.8', '1'));
+            }
+            
+            return { bg, border };
+        }
+        
+        // Excel export
+        function saveAsExcel(data, type, bulan, tahun) {
+            const ws = XLSX.utils.json_to_sheet(
+                Object.keys(data).map(key => ({
+                    [type === 'desa' ? 'Nama Desa' : 'Jenis Pemeriksaan']: key,
+                    'Jumlah': data[key]
+                }))
+            );
+            
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Data');
+            
+            XLSX.writeFile(wb, `data_${type}_${tahun}_${bulan}.xlsx`);
+        }
+        
+        // Notification system
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type} show`;
+            notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i> ${message}`;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 3000);
+        }
+        
+        // Event listeners
+        document.getElementById('selectDateDesaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            currentBulan = document.getElementById('desaBulan').value;
+            currentTahun = document.getElementById('desaTahun').value;
+            
+            if (!currentBulan) {
+                showNotification('Pilih bulan terlebih dahulu!', 'error');
+                return;
+            }
+            
+            document.getElementById('current-bulan-desa').textContent = getNamaBulan(currentBulan);
+            document.getElementById('current-tahun-desa').textContent = currentTahun;
+            
+            fillDesaTable();
+            showPage('input-desa-page');
+        });
+        
+        document.getElementById('selectDatePemeriksaanForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            currentBulan = document.getElementById('pemeriksaanBulan').value;
+            currentTahun = document.getElementById('pemeriksaanTahun').value;
+            
+            if (!currentBulan) {
+                showNotification('Pilih bulan terlebih dahulu!', 'error');
+                return;
+            }
+            
+            document.getElementById('current-bulan-pemeriksaan').textContent = getNamaBulan(currentBulan);
+            document.getElementById('current-tahun-pemeriksaan').textContent = currentTahun;
+            
+            fillPemeriksaanTable();
+            showPage('input-pemeriksaan-page');
+        });
+        
+        document.getElementById('desaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = {};
+            let hasData = false;
+            
+            for (const [key, value] of formData.entries()) {
+                const numValue = parseInt(value) || 0;
+                data[key] = numValue;
+                if (numValue > 0) hasData = true;
+            }
+            
+            if (!hasData) {
+                showNotification('Masukkan minimal satu data!', 'error');
+                return;
+            }
+            
+            const bulanTahun = `${currentBulan}-${currentTahun}`;
+            storedData.desa[bulanTahun] = data;
+            appStats.totalRecords++;
+            saveData();
+            
+            saveAsExcel(data, 'desa', currentBulan, currentTahun);
+            showNotification('Data desa berhasil disimpan!', 'success');
+            showPage('main-page');
+        });
+        
+        document.getElementById('pemeriksaanForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = {};
+            let hasData = false;
+            
+            for (const [key, value] of formData.entries()) {
+                const numValue = parseInt(value) || 0;
+                data[key] = numValue;
+                if (numValue > 0) hasData = true;
+            }
+            
+            if (!hasData) {
+                showNotification('Masukkan minimal satu data!', 'error');
+                return;
+            }
+            
+            const bulanTahun = `${currentBulan}-${currentTahun}`;
+            storedData.pemeriksaan[bulanTahun] = data;
+            appStats.totalRecords++;
+            saveData();
+            
+            saveAsExcel(data, 'pemeriksaan', currentBulan, currentTahun);
+            showNotification('Data lab berhasil disimpan!', 'success');
+            showPage('main-page');
+        });
+        
+        document.getElementById('generateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            currentDataType = document.getElementById('dataType').value;
+            currentBulan = document.getElementById('generateBulan').value;
+            currentTahun = document.getElementById('generateTahun').value;
+            currentChartType = document.getElementById('chartType').value;
+            
+            if (!currentDataType || !currentBulan || !currentChartType) {
+                showNotification('Lengkapi semua field!', 'error');
+                return;
+            }
+            
+            const bulanTahun = `${currentBulan}-${currentTahun}`;
+            const data = storedData[currentDataType][bulanTahun];
+            
+            if (!data) {
+                showNotification('Data tidak ditemukan!', 'error');
+                return;
+            }
+            
+            const filteredData = Object.entries(data)
+                .filter(([key, value]) => value > 0)
+                .sort((a, b) => b[1] - a[1]);
+            
+            if (filteredData.length === 0) {
+                showNotification('Tidak ada data valid!', 'error');
+                return;
+            }
+            
+            const labels = filteredData.map(item => item[0]);
+            const values = filteredData.map(item => item[1]);
+            
+            createChart(labels, values, currentDataType, currentBulan, currentTahun, currentChartType);
+            showPage('grafik-page');
+            
+            showNotification('Chart berhasil dibuat!', 'success');
+        });
+        
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            if (currentChart) {
+                const link = document.createElement('a');
+                link.download = `chart_${currentDataType}_${currentTahun}_${currentBulan}.png`;
+                link.href = document.getElementById('dataChart').toDataURL();
+                link.click();
+                showNotification('Chart berhasil didownload!', 'success');
+            }
+        });
+        
+        document.getElementById('downloadExcelBtn').addEventListener('click', function() {
+            const bulanTahun = `${currentBulan}-${currentTahun}`;
+            const data = storedData[currentDataType][bulanTahun];
+            if (data) {
+                saveAsExcel(data, currentDataType, currentBulan, currentTahun);
+                showNotification('Excel berhasil didownload!', 'success');
+            }
+        });
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            showNotification('Aplikasi siap digunakan!', 'success');
+        });
+    </script>
+</body>
+</html>
