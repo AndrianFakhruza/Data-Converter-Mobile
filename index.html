@@ -244,21 +244,38 @@
             font-size: 0.9rem;
         }
         
-        /* Chart Container - A4 Size */
+        /* Chart Container - Fixed for mobile */
         .chart-container {
             background: white;
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             margin: 20px 0;
+            overflow: hidden;
         }
         
         .chart-wrapper {
             position: relative;
-            height: 600px; /* A4 landscape ratio */
+            height: 600px;
             width: 100%;
-            max-width: 850px; /* A4 width equivalent */
+            max-width: 850px;
             margin: 0 auto;
+        }
+        
+        /* Hidden chart for high-quality export */
+        .export-chart-container {
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            width: 1200px;
+            height: 800px;
+            background: white;
+            z-index: -1;
+        }
+        
+        .export-chart-wrapper {
+            width: 1200px !important;
+            height: 800px !important;
         }
         
         /* Progress Bar */
@@ -390,7 +407,7 @@
                 font-size: 0.8rem;
             }
             
-            .chart-wrapper { height: 250px; }
+            .chart-wrapper { height: 350px; }
         }
         
         /* Utility Classes */
@@ -797,6 +814,11 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Hidden container for export quality chart -->
+        <div class="export-chart-container">
+            <canvas id="exportChart" class="export-chart-wrapper"></canvas>
+        </div>
     </div>
 
     <script>
@@ -807,12 +829,15 @@
         
         // Global variables
         let currentChart = null;
+        let exportChart = null;
         let currentBulan = "";
         let currentTahun = "";
         let currentDataType = "";
         let currentChartType = "bar";
         let storedData = { desa: {}, pemeriksaan: {} };
         let appStats = { totalRecords: 0, chartsGenerated: 0 };
+        let currentLabels = [];
+        let currentData = [];
         
         // Initialize app
         function initializeApp() {
@@ -1023,28 +1048,16 @@
             return names[parseInt(bulan)];
         }
         
-        function createChart(labels, data, type, bulan, tahun, chartType) {
-            const ctx = document.getElementById('dataChart').getContext('2d');
+        function getChartConfig(labels, data, type, bulan, tahun, chartType, isExport = false) {
             const title = type === 'desa' ? 
                 `DATA JUMLAH PEMERIKSAAN LABORATORIUM PERDESA\nBULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}` :
                 `DATA PEMERIKSAAN LABORATORIUM\nBULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}`;
             
-            document.getElementById('grafik-info').textContent = title.replace('\n', ' ');
-            
             const maxValue = Math.max(...data);
-            const average = Math.round(data.reduce((a, b) => a + b, 0) / data.length);
-            
-            document.getElementById('chartDataPoints').textContent = data.length;
-            document.getElementById('chartMaxValue').textContent = maxValue.toLocaleString();
-            document.getElementById('chartAverage').textContent = average.toLocaleString();
-            
-            if (currentChart) currentChart.destroy();
-            
-            // Professional color scheme
             const singleColor = '#4A90E2';
             const borderColor = '#357ABD';
             
-            currentChart = new Chart(ctx, {
+            return {
                 type: chartType,
                 data: {
                     labels: labels,
@@ -1057,7 +1070,7 @@
                             generateColors(data.length).border : borderColor,
                         borderWidth: 1,
                         barThickness: 'flex',
-                        maxBarThickness: 40
+                        maxBarThickness: isExport ? 50 : 40
                     }]
                 },
                 options: {
@@ -1065,10 +1078,10 @@
                     maintainAspectRatio: false,
                     layout: {
                         padding: {
-                            top: 40,
-                            bottom: 100,
-                            left: 70,
-                            right: 50
+                            top: isExport ? 50 : 40,
+                            bottom: isExport ? 120 : 100,
+                            left: isExport ? 80 : 70,
+                            right: isExport ? 60 : 50
                         }
                     },
                     plugins: {
@@ -1076,14 +1089,14 @@
                             display: true,
                             text: title.split('\n'),
                             font: { 
-                                size: 16, 
+                                size: isExport ? 20 : 16,
                                 weight: '600',
                                 family: 'Arial, sans-serif'
                             },
                             color: '#000',
                             padding: { 
                                 top: 10,
-                                bottom: 25 
+                                bottom: isExport ? 30 : 25
                             }
                         },
                         legend: {
@@ -1094,12 +1107,12 @@
                             color: '#000',
                             font: {
                                 weight: '600',
-                                size: 11,
+                                size: isExport ? 14 : 11,
                                 family: 'Arial, sans-serif'
                             },
                             anchor: 'end',
                             align: 'top',
-                            offset: 4,
+                            offset: isExport ? 6 : 4,
                             formatter: function(value) {
                                 return value.toString();
                             }
@@ -1108,11 +1121,11 @@
                     scales: ['bar', 'line'].includes(chartType) ? {
                         y: {
                             beginAtZero: true,
-                            max: Math.ceil(maxValue * 1.15), // Add 15% space above highest bar
+                            max: Math.ceil(maxValue * 1.15),
                             ticks: {
                                 stepSize: Math.ceil(maxValue / 10),
                                 font: { 
-                                    size: 11,
+                                    size: isExport ? 14 : 11,
                                     weight: '500',
                                     family: 'Arial, sans-serif'
                                 },
@@ -1138,7 +1151,7 @@
                                 maxRotation: 90,
                                 minRotation: 90,
                                 font: { 
-                                    size: 10,
+                                    size: isExport ? 12 : 10,
                                     weight: '500',
                                     family: 'Arial, sans-serif'
                                 },
@@ -1163,14 +1176,53 @@
                         }
                     },
                     animation: {
-                        duration: 1000,
+                        duration: isExport ? 0 : 1000,
                         easing: 'easeOutQuart'
                     }
                 }
-            });
+            };
+        }
+        
+        function createChart(labels, data, type, bulan, tahun, chartType) {
+            // Store current data for export
+            currentLabels = labels;
+            currentData = data;
+            
+            const ctx = document.getElementById('dataChart').getContext('2d');
+            const title = type === 'desa' ? 
+                `DATA JUMLAH PEMERIKSAAN LABORATORIUM PERDESA\nBULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}` :
+                `DATA PEMERIKSAAN LABORATORIUM\nBULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}`;
+            
+            document.getElementById('grafik-info').textContent = title.replace('\n', ' ');
+            
+            const maxValue = Math.max(...data);
+            const average = Math.round(data.reduce((a, b) => a + b, 0) / data.length);
+            
+            document.getElementById('chartDataPoints').textContent = data.length;
+            document.getElementById('chartMaxValue').textContent = maxValue.toLocaleString();
+            document.getElementById('chartAverage').textContent = average.toLocaleString();
+            
+            if (currentChart) currentChart.destroy();
+            
+            currentChart = new Chart(ctx, getChartConfig(labels, data, type, bulan, tahun, chartType, false));
+            
+            // Create high-quality export chart
+            createExportChart(labels, data, type, bulan, tahun, chartType);
             
             appStats.chartsGenerated++;
             saveData();
+        }
+        
+        function createExportChart(labels, data, type, bulan, tahun, chartType) {
+            const exportCanvas = document.getElementById('exportChart');
+            exportCanvas.width = 1200;
+            exportCanvas.height = 800;
+            
+            const exportCtx = exportCanvas.getContext('2d');
+            
+            if (exportChart) exportChart.destroy();
+            
+            exportChart = new Chart(exportCtx, getChartConfig(labels, data, type, bulan, tahun, chartType, true));
         }
         
         function generateColors(count) {
@@ -1352,22 +1404,24 @@
         });
         
         document.getElementById('downloadBtn').addEventListener('click', function() {
-            if (currentChart) {
+            if (exportChart) {
+                // Use the high-quality export chart
+                const exportCanvas = document.getElementById('exportChart');
+                
                 // Create a temporary canvas with white background
-                const originalCanvas = document.getElementById('dataChart');
                 const tempCanvas = document.createElement('canvas');
                 const tempCtx = tempCanvas.getContext('2d');
                 
-                // Set canvas dimensions same as original
-                tempCanvas.width = originalCanvas.width;
-                tempCanvas.height = originalCanvas.height;
+                // Set canvas dimensions
+                tempCanvas.width = exportCanvas.width;
+                tempCanvas.height = exportCanvas.height;
                 
                 // Fill with white background
                 tempCtx.fillStyle = 'white';
                 tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
                 
-                // Draw the original chart on top
-                tempCtx.drawImage(originalCanvas, 0, 0);
+                // Draw the export chart on top
+                tempCtx.drawImage(exportCanvas, 0, 0);
                 
                 // Download the temp canvas
                 const link = document.createElement('a');
