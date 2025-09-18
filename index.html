@@ -1058,6 +1058,7 @@
             const maxValue = Math.max(...data);
             const singleColor = '#4A90E2';
             const borderColor = '#357ABD';
+            const isMobile = window.innerWidth <= 768;
             
             return {
                 type: chartType,
@@ -1072,7 +1073,7 @@
                             generateColors(data.length).border : borderColor,
                         borderWidth: 1,
                         barThickness: 'flex',
-                        maxBarThickness: isExport ? 50 : 40
+                        maxBarThickness: isExport ? 50 : (isMobile ? 30 : 40)
                     }]
                 },
                 options: {
@@ -1080,10 +1081,10 @@
                     maintainAspectRatio: false,
                     layout: {
                         padding: {
-                            top: isExport ? 50 : 40,
-                            bottom: isExport ? 120 : 100,
-                            left: isExport ? 80 : 70,
-                            right: isExport ? 60 : 50
+                            top: isExport ? 50 : (isMobile ? 30 : 40),
+                            bottom: isExport ? 120 : (isMobile ? 80 : 100),
+                            left: isExport ? 80 : (isMobile ? 40 : 70),
+                            right: isExport ? 60 : (isMobile ? 30 : 50)
                         }
                     },
                     plugins: {
@@ -1091,14 +1092,14 @@
                             display: true,
                             text: title.split('\n'),
                             font: { 
-                                size: isExport ? 20 : 16,
+                                size: isExport ? 20 : (isMobile ? 14 : 16),
                                 weight: '600',
                                 family: 'Arial, sans-serif'
                             },
                             color: '#000',
                             padding: { 
                                 top: 10,
-                                bottom: isExport ? 30 : 25
+                                bottom: isExport ? 30 : (isMobile ? 20 : 25)
                             }
                         },
                         legend: {
@@ -1109,7 +1110,7 @@
                             color: '#000',
                             font: {
                                 weight: '600',
-                                size: isExport ? 14 : 11,
+                                size: isExport ? 14 : (isMobile ? 10 : 11),
                                 family: 'Arial, sans-serif'
                             },
                             anchor: 'end',
@@ -1127,7 +1128,7 @@
                             ticks: {
                                 stepSize: Math.ceil(maxValue / 10),
                                 font: { 
-                                    size: isExport ? 14 : 11,
+                                    size: isExport ? 14 : (isMobile ? 10 : 11),
                                     weight: '500',
                                     family: 'Arial, sans-serif'
                                 },
@@ -1153,7 +1154,7 @@
                                 maxRotation: 90,
                                 minRotation: 90,
                                 font: { 
-                                    size: isExport ? 12 : 10,
+                                    size: isExport ? 12 : (isMobile ? 8 : 10),
                                     weight: '500',
                                     family: 'Arial, sans-serif'
                                 },
