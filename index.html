@@ -1079,7 +1079,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    aspectRatio: isMobile ? 0.8 : 1.2,
+                    aspectRatio: isExport ? 1.5 : 1.5, // Consistent landscape ratio
                     layout: {
                         padding: {
                             top: isExport ? 50 : (isMobile ? 40 : 40),
@@ -1196,12 +1196,21 @@
             const canvas = document.getElementById('dataChart');
             const container = canvas.parentElement;
             
-            // Set landscape dimensions for proper preview
+            // Set fixed landscape dimensions
             const isMobile = window.innerWidth <= 768;
-            const targetHeight = isMobile ? (window.innerWidth <= 480 ? 320 : 400) : 600;
-            
-            container.style.height = targetHeight + 'px';
-            container.style.minHeight = targetHeight + 'px';
+            if (isMobile) {
+                const isSmallMobile = window.innerWidth <= 480;
+                const targetWidth = isSmallMobile ? 350 : 450;
+                const targetHeight = isSmallMobile ? 250 : 300;
+                
+                // Force fixed dimensions
+                container.style.width = targetWidth + 'px';
+                container.style.height = targetHeight + 'px';
+                canvas.style.width = targetWidth + 'px';
+                canvas.style.height = targetHeight + 'px';
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+            }
             
             const title = type === 'desa' ? 
                 `DATA JUMLAH PEMERIKSAAN LABORATORIUM PERDESA\nBULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}` :
@@ -1220,10 +1229,11 @@
             
             const config = getChartConfig(labels, data, type, bulan, tahun, chartType, false);
             
-            // Use landscape aspect ratio for consistent preview
-            config.options.responsive = true;
-            config.options.maintainAspectRatio = false;
-            config.options.aspectRatio = 1.5; // Landscape ratio 3:2
+            // Force non-responsive for mobile with fixed dimensions
+            if (isMobile) {
+                config.options.responsive = false;
+                config.options.maintainAspectRatio = false;
+            }
             
             currentChart = new Chart(ctx, config);
             
