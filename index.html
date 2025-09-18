@@ -1196,22 +1196,12 @@
             const canvas = document.getElementById('dataChart');
             const container = canvas.parentElement;
             
-            // Force container and canvas sizing for mobile
+            // Set landscape dimensions for proper preview
             const isMobile = window.innerWidth <= 768;
-            if (isMobile) {
-                const targetHeight = window.innerWidth <= 480 ? 500 : 600;
-                container.style.height = targetHeight + 'px';
-                container.style.minHeight = targetHeight + 'px';
-                canvas.style.height = targetHeight + 'px';
-                
-                // Force canvas actual dimensions
-                setTimeout(() => {
-                    canvas.height = targetHeight;
-                    if (currentChart) {
-                        currentChart.resize();
-                    }
-                }, 100);
-            }
+            const targetHeight = isMobile ? (window.innerWidth <= 480 ? 320 : 400) : 600;
+            
+            container.style.height = targetHeight + 'px';
+            container.style.minHeight = targetHeight + 'px';
             
             const title = type === 'desa' ? 
                 `DATA JUMLAH PEMERIKSAAN LABORATORIUM PERDESA\nBULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}` :
@@ -1230,24 +1220,12 @@
             
             const config = getChartConfig(labels, data, type, bulan, tahun, chartType, false);
             
-            // Override responsive behavior for mobile
-            if (isMobile) {
-                config.options.responsive = false;
-                config.options.maintainAspectRatio = false;
-                // Force aspect ratio calculation
-                config.options.aspectRatio = 1.0; // Square ratio for better height
-            }
+            // Use landscape aspect ratio for consistent preview
+            config.options.responsive = true;
+            config.options.maintainAspectRatio = false;
+            config.options.aspectRatio = 1.5; // Landscape ratio 3:2
             
             currentChart = new Chart(ctx, config);
-            
-            // Force resize after creation
-            if (isMobile) {
-                setTimeout(() => {
-                    if (currentChart) {
-                        currentChart.resize();
-                    }
-                }, 200);
-            }
             
             // Create high-quality export chart
             createExportChart(labels, data, type, bulan, tahun, chartType);
