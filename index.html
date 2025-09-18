@@ -1194,14 +1194,23 @@
             
             const ctx = document.getElementById('dataChart').getContext('2d');
             const canvas = document.getElementById('dataChart');
+            const container = canvas.parentElement;
             
-            // Set canvas dimensions based on device
+            // Force container and canvas sizing for mobile
             const isMobile = window.innerWidth <= 768;
             if (isMobile) {
-                canvas.style.width = '100%';
-                canvas.style.height = window.innerWidth <= 480 ? '500px' : '600px';
-                canvas.width = canvas.offsetWidth;
-                canvas.height = window.innerWidth <= 480 ? 500 : 600;
+                const targetHeight = window.innerWidth <= 480 ? 500 : 600;
+                container.style.height = targetHeight + 'px';
+                container.style.minHeight = targetHeight + 'px';
+                canvas.style.height = targetHeight + 'px';
+                
+                // Force canvas actual dimensions
+                setTimeout(() => {
+                    canvas.height = targetHeight;
+                    if (currentChart) {
+                        currentChart.resize();
+                    }
+                }, 100);
             }
             
             const title = type === 'desa' ? 
@@ -1219,7 +1228,26 @@
             
             if (currentChart) currentChart.destroy();
             
-            currentChart = new Chart(ctx, getChartConfig(labels, data, type, bulan, tahun, chartType, false));
+            const config = getChartConfig(labels, data, type, bulan, tahun, chartType, false);
+            
+            // Override responsive behavior for mobile
+            if (isMobile) {
+                config.options.responsive = false;
+                config.options.maintainAspectRatio = false;
+                // Force aspect ratio calculation
+                config.options.aspectRatio = 1.0; // Square ratio for better height
+            }
+            
+            currentChart = new Chart(ctx, config);
+            
+            // Force resize after creation
+            if (isMobile) {
+                setTimeout(() => {
+                    if (currentChart) {
+                        currentChart.resize();
+                    }
+                }, 200);
+            }
             
             // Create high-quality export chart
             createExportChart(labels, data, type, bulan, tahun, chartType);
