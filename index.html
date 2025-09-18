@@ -1193,6 +1193,17 @@
             currentData = data;
             
             const ctx = document.getElementById('dataChart').getContext('2d');
+            const canvas = document.getElementById('dataChart');
+            
+            // Set canvas dimensions based on device
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                canvas.style.width = '100%';
+                canvas.style.height = window.innerWidth <= 480 ? '500px' : '600px';
+                canvas.width = canvas.offsetWidth;
+                canvas.height = window.innerWidth <= 480 ? 500 : 600;
+            }
+            
             const title = type === 'desa' ? 
                 `DATA JUMLAH PEMERIKSAAN LABORATORIUM PERDESA\nBULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}` :
                 `DATA PEMERIKSAAN LABORATORIUM\nBULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}`;
