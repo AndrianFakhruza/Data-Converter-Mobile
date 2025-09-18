@@ -1246,10 +1246,19 @@
         
         function createExportChart(labels, data, type, bulan, tahun, chartType) {
             const exportCanvas = document.getElementById('exportChart');
+            if (!exportCanvas) {
+                console.error('Export canvas not found');
+                return;
+            }
+            
             exportCanvas.width = 1200;
             exportCanvas.height = 800;
             
             const exportCtx = exportCanvas.getContext('2d');
+            if (!exportCtx) {
+                console.error('Could not get export canvas context');
+                return;
+            }
             
             if (exportChart) exportChart.destroy();
             
@@ -1439,6 +1448,11 @@
                 // Use the high-quality export chart
                 const exportCanvas = document.getElementById('exportChart');
                 
+                if (!exportCanvas) {
+                    showNotification('Chart belum dibuat!', 'error');
+                    return;
+                }
+                
                 // Create a temporary canvas with white background
                 const tempCanvas = document.createElement('canvas');
                 const tempCtx = tempCanvas.getContext('2d');
@@ -1460,6 +1474,8 @@
                 link.href = tempCanvas.toDataURL('image/png');
                 link.click();
                 showNotification('Chart berhasil didownload!', 'success');
+            } else {
+                showNotification('Chart belum dibuat! Generate chart terlebih dahulu.', 'error');
             }
         });
         
