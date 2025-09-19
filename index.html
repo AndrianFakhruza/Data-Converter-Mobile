@@ -10,88 +10,219 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
         
-        body {
+        html, body {
+            height: 100vh;
+            overflow: hidden;
             font-family: 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #7dd3c0 0%, #47a3a0 50%, #f5e6a3 100%);
-            min-height: 100vh;
             color: #2d5a5a;
         }
         
-        .container-fluid { max-width: 1200px; padding: 10px; }
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #7dd3c0 0%, #47a3a0 50%, #f5e6a3 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
         
-        /* Header */
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        .loading-text {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Main Container */
+        .main-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            gap: 8px;
+        }
+        
+        /* Header - Fixed Height */
         .header {
             background: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 15px;
+            border-radius: 12px;
+            padding: 12px;
             text-align: center;
             box-shadow: 0 4px 15px rgba(45, 90, 90, 0.15);
             border: 1px solid rgba(125, 211, 192, 0.3);
+            flex-shrink: 0;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         
         .header h1 {
             color: #2d5a5a;
-            font-size: 1.8rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            margin-bottom: 5px;
+            margin: 0;
         }
         
-        /* Cards */
-        .card {
+        .header p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #47a3a0;
+        }
+        
+        /* Content Area - Flexible */
+        .content-area {
+            flex: 1;
+            overflow: hidden;
             background: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(125, 211, 192, 0.2);
-            border-radius: 15px;
+            border-radius: 12px;
             box-shadow: 0 4px 15px rgba(45, 90, 90, 0.1);
-            margin-bottom: 15px;
-            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         
-        .card-header {
+        .content-header {
             background: linear-gradient(135deg, #47a3a0, #2d5a5a);
             color: white;
-            padding: 15px;
-            border: none;
+            padding: 12px;
+            border-radius: 12px 12px 0 0;
+            flex-shrink: 0;
         }
         
-        .card-title {
-            font-size: 1.3rem;
+        .content-title {
+            font-size: 1.1rem;
             font-weight: 600;
             margin: 0;
             text-align: center;
         }
         
-        .card-body { padding: 15px; }
+        .content-body {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
         
-        /* Menu Grid */
+        /* Custom Scrollbar */
+        .content-body::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .content-body::-webkit-scrollbar-track {
+            background: rgba(245, 230, 163, 0.2);
+        }
+        
+        .content-body::-webkit-scrollbar-thumb {
+            background: #47a3a0;
+            border-radius: 3px;
+        }
+        
+        .content-body::-webkit-scrollbar-thumb:hover {
+            background: #2d5a5a;
+        }
+        
+        /* Summary Grid - Compact */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+        
+        .summary-card {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(45, 90, 90, 0.1);
+            border: 1px solid rgba(125, 211, 192, 0.3);
+            border-left: 4px solid #47a3a0;
+        }
+        
+        .summary-card .number {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #47a3a0;
+            margin-bottom: 2px;
+        }
+        
+        .summary-card .label {
+            color: #2d5a5a;
+            font-size: 0.75rem;
+        }
+        
+        /* Menu Grid - Compact */
         .menu-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 12px;
-            margin-top: 15px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            flex: 1;
         }
         
         .menu-item {
             background: linear-gradient(135deg, #7dd3c0, #47a3a0);
             color: white;
-            padding: 20px 15px;
-            border-radius: 12px;
+            padding: 12px 8px;
+            border-radius: 10px;
             text-decoration: none;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             transition: all 0.3s ease;
             box-shadow: 0 4px 10px rgba(71, 163, 160, 0.25);
+            min-height: 80px;
         }
         
         .menu-item:hover {
-            transform: translateY(-3px);
+            transform: translateY(-2px);
             color: white;
-            box-shadow: 0 8px 25px rgba(71, 163, 160, 0.35);
+            box-shadow: 0 6px 20px rgba(71, 163, 160, 0.35);
             background: linear-gradient(135deg, #47a3a0, #2d5a5a);
         }
         
@@ -112,44 +243,52 @@
         }
         
         .menu-item .icon {
-            font-size: 2.2rem;
-            margin-bottom: 12px;
+            font-size: 1.5rem;
+            margin-bottom: 6px;
         }
         
-        /* Forms */
+        .menu-item .label {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        /* Forms - Compact */
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
         }
         
         label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             font-weight: 600;
             color: #2d5a5a;
+            font-size: 0.85rem;
         }
         
         .form-control, .form-select {
-            border-radius: 8px;
+            border-radius: 6px;
             border: 2px solid rgba(125, 211, 192, 0.4);
-            padding: 10px 12px;
-            font-size: 0.95rem;
+            padding: 6px 8px;
+            font-size: 0.85rem;
             transition: border-color 0.3s ease;
             background: rgba(255, 255, 255, 0.9);
         }
         
         .form-control:focus, .form-select:focus {
             border-color: #47a3a0;
-            box-shadow: 0 0 0 0.2rem rgba(71, 163, 160, 0.2);
+            box-shadow: 0 0 0 0.15rem rgba(71, 163, 160, 0.2);
         }
         
-        /* Buttons */
+        /* Buttons - Compact */
         .btn {
-            border-radius: 8px;
-            padding: 10px 20px;
+            border-radius: 6px;
+            padding: 6px 12px;
             font-weight: 600;
             transition: all 0.3s ease;
             border: none;
-            margin: 3px;
+            margin: 2px;
+            font-size: 0.8rem;
         }
         
         .btn-primary {
@@ -199,119 +338,140 @@
             background: rgba(230, 181, 102, 0.8);
         }
         
-        /* Tables */
-        .table-responsive {
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 10px rgba(45, 90, 90, 0.1);
-            margin-bottom: 15px;
-            max-height: 350px;
-            overflow-y: auto;
-            border: 1px solid rgba(125, 211, 192, 0.3);
+        /* Table Container - Flexible */
+        .table-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
         }
         
-        .table {
-            margin: 0;
-            background: white;
-        }
-        
-        .table thead th {
-            background: linear-gradient(135deg, #47a3a0, #2d5a5a);
-            color: white;
-            border: none;
-            padding: 12px 8px;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        
-        .table tbody td {
-            padding: 10px 8px;
-            border-top: 1px solid rgba(245, 230, 163, 0.3);
-        }
-        
-        .table tbody tr:hover {
-            background-color: rgba(125, 211, 192, 0.08);
-        }
-        
-        /* Search Box */
         .search-box {
             position: relative;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
+            flex-shrink: 0;
         }
         
         .search-box input {
-            padding-left: 40px;
-            border-radius: 25px;
+            padding-left: 30px;
+            border-radius: 20px;
             border: 2px solid rgba(125, 211, 192, 0.4);
             background: rgba(255, 255, 255, 0.9);
+            font-size: 0.8rem;
+            height: 32px;
         }
         
         .search-box i {
             position: absolute;
-            left: 12px;
+            left: 10px;
             top: 50%;
             transform: translateY(-50%);
             color: #47a3a0;
+            font-size: 0.8rem;
         }
         
-        /* Summary Cards */
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-        
-        .summary-card {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(45, 90, 90, 0.1);
-            border: 1px solid rgba(125, 211, 192, 0.3);
-            border-left: 4px solid #47a3a0;
-        }
-        
-        .summary-card .number {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: #47a3a0;
-            margin-bottom: 5px;
-        }
-        
-        .summary-card .label {
-            color: #2d5a5a;
-            font-size: 0.85rem;
-        }
-        
-        /* Progress Bar */
         .progress {
-            height: 6px;
-            border-radius: 3px;
-            margin: 10px 0;
+            height: 4px;
+            border-radius: 2px;
+            margin: 6px 0;
             background: rgba(245, 230, 163, 0.4);
+            flex-shrink: 0;
         }
         
         .progress-bar {
             background: linear-gradient(90deg, #7dd3c0, #47a3a0);
         }
         
+        .table-responsive {
+            flex: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(45, 90, 90, 0.1);
+            border: 1px solid rgba(125, 211, 192, 0.3);
+            min-height: 0;
+        }
+        
+        .table {
+            margin: 0;
+            background: white;
+            font-size: 0.75rem;
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, #47a3a0, #2d5a5a);
+            color: white;
+            border: none;
+            padding: 8px 4px;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-size: 0.75rem;
+        }
+        
+        .table tbody td {
+            padding: 4px;
+            border-top: 1px solid rgba(245, 230, 163, 0.3);
+            vertical-align: middle;
+        }
+        
+        .table tbody tr:hover {
+            background-color: rgba(125, 211, 192, 0.08);
+        }
+        
+        .table input {
+            padding: 2px 4px;
+            font-size: 0.7rem;
+            border: 1px solid rgba(125, 211, 192, 0.4);
+            border-radius: 4px;
+            width: 100%;
+            max-width: 60px;
+        }
+        
+        /* Badge */
+        .badge {
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 0.65rem;
+        }
+        
+        .badge-month {
+            background: linear-gradient(135deg, #47a3a0, #2d5a5a);
+            color: white;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+        
+        /* Button Container */
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+            margin-top: 8px;
+            flex-shrink: 0;
+        }
+        
+        .button-container .btn {
+            flex: 1;
+            min-width: 120px;
+        }
+        
         /* Notifications */
         .notification {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 12px 18px;
-            border-radius: 8px;
+            top: 15px;
+            right: 15px;
+            padding: 8px 12px;
+            border-radius: 6px;
             color: white;
             font-weight: 500;
             z-index: 1000;
             transform: translateX(100%);
             transition: transform 0.3s ease;
-            max-width: 280px;
+            max-width: 250px;
             word-wrap: break-word;
+            font-size: 0.8rem;
         }
         
         .notification.show {
@@ -331,23 +491,13 @@
             background: linear-gradient(135deg, #47a3a0, #2d5a5a);
         }
         
-        /* Badges */
-        .badge {
-            padding: 6px 12px;
-            border-radius: 12px;
-            font-size: 0.85rem;
-        }
-        
-        .badge-month {
-            background: linear-gradient(135deg, #47a3a0, #2d5a5a);
-            color: white;
-        }
-        
         /* Alert */
         .alert {
-            padding: 12px 15px;
-            border-radius: 8px;
+            padding: 8px 10px;
+            border-radius: 6px;
             border: none;
+            margin: 8px 0;
+            font-size: 0.8rem;
         }
         
         .alert-success {
@@ -357,152 +507,104 @@
             border-left: 4px solid #47a3a0;
         }
         
-        /* Mobile Responsive */
+        /* Utility Classes */
+        .page { 
+            display: none;
+            height: 100%;
+        }
+        .page.active { 
+            display: flex;
+            flex-direction: column;
+        }
+        .text-center { text-align: center; }
+        .d-none { display: none; }
+        
+        /* Mobile Specific */
         @media (max-width: 768px) {
-            .container-fluid { padding: 5px; }
-            
-            .header h1 { font-size: 1.5rem; }
-            .header { padding: 12px; margin-bottom: 12px; }
-            
-            .card-body { padding: 12px; }
-            .card-header { padding: 12px; }
-            .card { margin-bottom: 12px; }
-            
-            .menu-grid {
-                grid-template-columns: 1fr;
-                gap: 8px;
+            .main-container {
+                padding: 4px;
+                gap: 4px;
             }
             
-            .menu-item {
-                padding: 15px 12px;
+            .header {
+                height: 60px;
+                padding: 8px;
             }
             
-            .menu-item .icon { font-size: 2rem; }
+            .header h1 { font-size: 1.1rem; }
+            .header p { font-size: 0.7rem; }
             
-            .summary-grid {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 8px;
+            .content-header { padding: 8px; }
+            .content-title { font-size: 1rem; }
+            .content-body { padding: 8px; }
+            
+            .summary-grid { gap: 4px; }
+            .summary-card { padding: 6px; }
+            .summary-card .number { font-size: 1rem; }
+            .summary-card .label { font-size: 0.65rem; }
+            
+            .menu-grid { gap: 6px; }
+            .menu-item { 
+                padding: 8px 4px; 
+                min-height: 70px; 
+            }
+            .menu-item .icon { font-size: 1.3rem; }
+            .menu-item .label { font-size: 0.7rem; }
+            
+            .form-group { margin-bottom: 8px; }
+            .form-control, .form-select { 
+                padding: 4px 6px; 
+                font-size: 0.8rem; 
             }
             
-            .summary-card {
-                padding: 12px 8px;
+            .btn { 
+                padding: 4px 8px; 
+                font-size: 0.75rem;
+                min-width: 100px;
             }
             
-            .summary-card .number { font-size: 1.3rem; }
-            .summary-card .label { font-size: 0.8rem; }
-            
-            .btn {
-                padding: 8px 15px;
-                font-size: 0.9rem;
-                margin: 2px;
-                width: 100%;
-            }
-            
-            .table thead th, .table tbody td {
-                padding: 6px 4px;
-                font-size: 0.8rem;
-            }
-            
-            .table-responsive {
-                max-height: 300px;
-            }
-            
-            .form-group {
-                margin-bottom: 12px;
-            }
-            
-            .form-control, .form-select {
-                padding: 8px 10px;
-                font-size: 0.9rem;
+            .table { font-size: 0.65rem; }
+            .table thead th, .table tbody td { padding: 2px; }
+            .table input { 
+                max-width: 50px;
+                font-size: 0.65rem;
             }
             
             .notification {
-                right: 5px;
-                left: 5px;
+                right: 4px;
+                left: 4px;
                 transform: translateY(-100%);
                 max-width: none;
-                font-size: 0.85rem;
-                padding: 10px 12px;
+                font-size: 0.75rem;
+                padding: 6px 8px;
+                top: 4px;
             }
             
             .notification.show {
                 transform: translateY(0);
             }
-            
-            /* Compact layout for mobile */
-            .page {
-                max-height: calc(100vh - 20px);
-                overflow-y: auto;
-            }
         }
         
+        /* Very Small Screens */
         @media (max-width: 480px) {
-            .header h1 { font-size: 1.3rem; }
-            
-            .summary-grid { grid-template-columns: 1fr; }
-            
-            .form-control, .form-select {
-                padding: 8px 10px;
-                font-size: 0.85rem;
+            .summary-grid { 
+                grid-template-columns: 1fr; 
+                gap: 3px;
             }
             
-            .table-responsive {
-                font-size: 0.75rem;
-                max-height: 250px;
+            .menu-grid { 
+                grid-template-columns: 1fr;
+                gap: 4px;
             }
             
-            .btn {
-                font-size: 0.85rem;
-                padding: 8px 12px;
-            }
+            .menu-item { min-height: 50px; }
+            .menu-item .icon { font-size: 1.1rem; }
             
-            .menu-item .icon { font-size: 1.8rem; }
-        }
-        
-        /* Desktop optimizations */
-        @media (min-width: 769px) {
-            .page {
-                max-height: calc(100vh - 30px);
-                overflow-y: auto;
-            }
-            
-            .container-fluid {
-                display: flex;
-                flex-direction: column;
-                height: calc(100vh - 20px);
-            }
-            
-            .header {
-                flex-shrink: 0;
-                margin-bottom: 10px;
-                padding: 12px;
-            }
-            
-            .page {
-                flex: 1;
-                overflow-y: auto;
-            }
-            
-            .card {
-                height: fit-content;
-                margin-bottom: 10px;
-            }
-            
-            .card-body {
-                padding: 15px;
+            .button-container .btn { 
+                min-width: 80px;
+                font-size: 0.7rem;
             }
         }
-        
-        /* Utility Classes */
-        .page { display: none; }
-        .page.active { display: block; }
-        .text-center { text-align: center; }
-        .mb-3 { margin-bottom: 1rem; }
-        .mt-3 { margin-top: 1rem; }
-        .d-none { display: none; }
-        
-        /* Loading */
-        .loading { opacity: 0.7; pointer-events: none; }
         
         /* Animations */
         .fade-in {
@@ -510,65 +612,36 @@
         }
         
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* Compact scrollbars */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: rgba(245, 230, 163, 0.2);
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #47a3a0;
-            border-radius: 3px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #2d5a5a;
-        }
-        
-        /* Utility Classes */
-        .page { display: none; }
-        .page.active { display: block; }
-        .text-center { text-align: center; }
-        .mb-3 { margin-bottom: 1rem; }
-        .mt-3 { margin-top: 1rem; }
-        .d-none { display: none; }
-        
-        /* Loading */
-        .loading { opacity: 0.7; pointer-events: none; }
-        
-        /* Animations */
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid">
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loader"></div>
+        <div class="loading-text">
+            <div>Memuat Data Converter</div>
+            <div style="font-size: 0.9rem; margin-top: 5px;">Mohon tunggu sebentar...</div>
+        </div>
+    </div>
+
+    <div class="main-container" id="mainApp" style="display: none;">
         <!-- Header -->
         <div class="header fade-in">
             <h1><i class="fas fa-chart-line"></i> Data Converter</h1>
             <p>Sistem Laporan Bulanan Mobile-Friendly</p>
         </div>
         
-        <!-- Main Menu -->
-        <div id="main-page" class="page active">
-            <div class="card fade-in">
-                <div class="card-header">
-                    <h2 class="card-title">Dashboard Utama</h2>
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Main Menu -->
+            <div id="main-page" class="page active">
+                <div class="content-header">
+                    <h2 class="content-title">Dashboard Utama</h2>
                 </div>
-                <div class="card-body">
+                <div class="content-body">
                     <div class="summary-grid" id="mainSummary">
                         <div class="summary-card">
                             <div class="number" id="totalDesaData">0</div>
@@ -600,15 +673,13 @@
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Select Date for Desa -->
-        <div id="select-date-desa-page" class="page">
-            <div class="card fade-in">
-                <div class="card-header">
-                    <h2 class="card-title">Pilih Periode Data Desa</h2>
+            
+            <!-- Select Date for Desa -->
+            <div id="select-date-desa-page" class="page">
+                <div class="content-header">
+                    <h2 class="content-title">Pilih Periode Data Desa</h2>
                 </div>
-                <div class="card-body">
+                <div class="content-body">
                     <form id="selectDateDesaForm">
                         <div class="form-group">
                             <label><i class="fas fa-calendar-alt"></i> Bulan</label>
@@ -632,7 +703,7 @@
                             <label><i class="fas fa-calendar"></i> Tahun</label>
                             <input type="number" class="form-control" id="desaTahun" value="2025" min="2020" max="2030" required>
                         </div>
-                        <div class="text-center">
+                        <div class="button-container">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-arrow-right"></i> Lanjutkan
                             </button>
@@ -643,16 +714,14 @@
                     </form>
                 </div>
             </div>
-        </div>
-        
-        <!-- Input Desa Data -->
-        <div id="input-desa-page" class="page">
-            <div class="card fade-in">
-                <div class="card-header">
-                    <h2 class="card-title">Input Data Desa</h2>
+            
+            <!-- Input Desa Data -->
+            <div id="input-desa-page" class="page">
+                <div class="content-header">
+                    <h2 class="content-title">Input Data Desa</h2>
                 </div>
-                <div class="card-body">
-                    <div class="text-center mb-3">
+                <div class="content-body">
+                    <div class="text-center">
                         <span class="badge badge-month">
                             Periode: <span id="current-bulan-desa"></span> <span id="current-tahun-desa"></span>
                         </span>
@@ -673,55 +742,55 @@
                         </div>
                     </div>
                     
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" class="form-control" id="search-desa" placeholder="Cari desa..." onkeyup="searchTable('desa')">
-                    </div>
-                    
-                    <div class="progress">
-                        <div class="progress-bar" id="desaProgress" style="width: 0%"></div>
-                    </div>
-                    
-                    <form id="desaForm">
-                        <div class="table-responsive">
-                            <table class="table" id="desa-table">
-                                <thead>
-                                    <tr>
-                                        <th>Nama Desa</th>
-                                        <th>Jumlah</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="desa-table-body"></tbody>
-                            </table>
+                    <div class="table-container">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" class="form-control" id="search-desa" placeholder="Cari desa..." onkeyup="searchTable('desa')">
                         </div>
                         
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save"></i> Simpan
-                            </button>
-                            <button type="button" class="btn btn-danger" onclick="clearDesaForm()">
-                                <i class="fas fa-eraser"></i> Reset
-                            </button>
-                            <button type="button" class="btn btn-warning" onclick="autoFillDesa()">
-                                <i class="fas fa-magic"></i> Sample
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="showPage('select-date-desa-page')">
-                                <i class="fas fa-arrow-left"></i> Kembali
-                            </button>
+                        <div class="progress">
+                            <div class="progress-bar" id="desaProgress" style="width: 0%"></div>
                         </div>
-                    </form>
+                        
+                        <form id="desaForm">
+                            <div class="table-responsive">
+                                <table class="table" id="desa-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nama Desa</th>
+                                            <th>Jumlah</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="desa-table-body"></tbody>
+                                </table>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="button-container">
+                        <button type="submit" form="desaForm" class="btn btn-success">
+                            <i class="fas fa-save"></i> Simpan
+                        </button>
+                        <button type="button" class="btn btn-danger" onclick="clearDesaForm()">
+                            <i class="fas fa-eraser"></i> Reset
+                        </button>
+                        <button type="button" class="btn btn-warning" onclick="autoFillDesa()">
+                            <i class="fas fa-magic"></i> Sample
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="showPage('select-date-desa-page')">
+                            <i class="fas fa-arrow-left"></i> Kembali
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Select Date for Pemeriksaan -->
-        <div id="select-date-pemeriksaan-page" class="page">
-            <div class="card fade-in">
-                <div class="card-header">
-                    <h2 class="card-title">Pilih Periode Data Lab</h2>
+            
+            <!-- Select Date for Pemeriksaan -->
+            <div id="select-date-pemeriksaan-page" class="page">
+                <div class="content-header">
+                    <h2 class="content-title">Pilih Periode Data Lab</h2>
                 </div>
-                <div class="card-body">
+                <div class="content-body">
                     <form id="selectDatePemeriksaanForm">
                         <div class="form-group">
                             <label><i class="fas fa-calendar-alt"></i> Bulan</label>
@@ -745,7 +814,7 @@
                             <label><i class="fas fa-calendar"></i> Tahun</label>
                             <input type="number" class="form-control" id="pemeriksaanTahun" value="2025" min="2020" max="2030" required>
                         </div>
-                        <div class="text-center">
+                        <div class="button-container">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-arrow-right"></i> Lanjutkan
                             </button>
@@ -756,16 +825,14 @@
                     </form>
                 </div>
             </div>
-        </div>
-        
-        <!-- Input Pemeriksaan Data -->
-        <div id="input-pemeriksaan-page" class="page">
-            <div class="card fade-in">
-                <div class="card-header">
-                    <h2 class="card-title">Input Data Lab</h2>
+            
+            <!-- Input Pemeriksaan Data -->
+            <div id="input-pemeriksaan-page" class="page">
+                <div class="content-header">
+                    <h2 class="content-title">Input Data Lab</h2>
                 </div>
-                <div class="card-body">
-                    <div class="text-center mb-3">
+                <div class="content-body">
+                    <div class="text-center">
                         <span class="badge badge-month">
                             Periode: <span id="current-bulan-pemeriksaan"></span> <span id="current-tahun-pemeriksaan"></span>
                         </span>
@@ -786,55 +853,55 @@
                         </div>
                     </div>
                     
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" class="form-control" id="search-pemeriksaan" placeholder="Cari pemeriksaan..." onkeyup="searchTable('pemeriksaan')">
-                    </div>
-                    
-                    <div class="progress">
-                        <div class="progress-bar" id="pemeriksaanProgress" style="width: 0%"></div>
-                    </div>
-                    
-                    <form id="pemeriksaanForm">
-                        <div class="table-responsive">
-                            <table class="table" id="pemeriksaan-table">
-                                <thead>
-                                    <tr>
-                                        <th>Jenis Pemeriksaan</th>
-                                        <th>Jumlah</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="pemeriksaan-table-body"></tbody>
-                            </table>
+                    <div class="table-container">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" class="form-control" id="search-pemeriksaan" placeholder="Cari pemeriksaan..." onkeyup="searchTable('pemeriksaan')">
                         </div>
                         
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save"></i> Simpan
-                            </button>
-                            <button type="button" class="btn btn-danger" onclick="clearPemeriksaanForm()">
-                                <i class="fas fa-eraser"></i> Reset
-                            </button>
-                            <button type="button" class="btn btn-warning" onclick="autoFillPemeriksaan()">
-                                <i class="fas fa-magic"></i> Sample
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="showPage('select-date-pemeriksaan-page')">
-                                <i class="fas fa-arrow-left"></i> Kembali
-                            </button>
+                        <div class="progress">
+                            <div class="progress-bar" id="pemeriksaanProgress" style="width: 0%"></div>
                         </div>
-                    </form>
+                        
+                        <form id="pemeriksaanForm">
+                            <div class="table-responsive">
+                                <table class="table" id="pemeriksaan-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Jenis Pemeriksaan</th>
+                                            <th>Jumlah</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pemeriksaan-table-body"></tbody>
+                                </table>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="button-container">
+                        <button type="submit" form="pemeriksaanForm" class="btn btn-success">
+                            <i class="fas fa-save"></i> Simpan
+                        </button>
+                        <button type="button" class="btn btn-danger" onclick="clearPemeriksaanForm()">
+                            <i class="fas fa-eraser"></i> Reset
+                        </button>
+                        <button type="button" class="btn btn-warning" onclick="autoFillPemeriksaan()">
+                            <i class="fas fa-magic"></i> Sample
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="showPage('select-date-pemeriksaan-page')">
+                            <i class="fas fa-arrow-left"></i> Kembali
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Generate Chart -->
-        <div id="generate-page" class="page">
-            <div class="card fade-in">
-                <div class="card-header">
-                    <h2 class="card-title">Visualisasi Data</h2>
+            
+            <!-- Generate Chart -->
+            <div id="generate-page" class="page">
+                <div class="content-header">
+                    <h2 class="content-title">Visualisasi Data</h2>
                 </div>
-                <div class="card-body">
+                <div class="content-body">
                     <div class="summary-grid">
                         <div class="summary-card">
                             <div class="number" id="availableDesaMonths">0</div>
@@ -879,7 +946,7 @@
                                 <option value="doughnut">Doughnut Chart</option>
                             </select>
                         </div>
-                        <div class="text-center">
+                        <div class="button-container">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-chart-bar"></i> Generate Chart
                             </button>
@@ -890,16 +957,14 @@
                     </form>
                 </div>
             </div>
-        </div>
-        
-        <!-- Chart Display -->
-        <div id="grafik-page" class="page">
-            <div class="card fade-in">
-                <div class="card-header">
-                    <h2 class="card-title">Visualisasi Data</h2>
+            
+            <!-- Chart Display -->
+            <div id="grafik-page" class="page">
+                <div class="content-header">
+                    <h2 class="content-title">Visualisasi Data</h2>
                 </div>
-                <div class="card-body">
-                    <p class="text-center mb-3" id="grafik-info"></p>
+                <div class="content-body">
+                    <p class="text-center" id="grafik-info" style="font-size: 0.8rem; margin-bottom: 8px;"></p>
                     
                     <div class="summary-grid" id="chartSummary">
                         <div class="summary-card">
@@ -916,14 +981,13 @@
                         </div>
                     </div>
                     
-                    <!-- Chart Info Only -->
-                    <div class="text-center mb-4">
+                    <div class="text-center" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
                         <div class="alert alert-success">
                             <i class="fas fa-check-circle"></i> Chart berhasil dibuat! Silakan download menggunakan tombol di bawah ini.
                         </div>
                     </div>
                     
-                    <div class="text-center">
+                    <div class="button-container">
                         <button id="downloadBtn" class="btn btn-warning">
                             <i class="fas fa-download"></i> Download PNG
                         </button>
@@ -937,11 +1001,11 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Hidden container for export quality chart -->
-        <div class="export-chart-container" style="position: fixed; top: -9999px; left: -9999px; width: 1200px; height: 800px; background: white; z-index: -1000; visibility: hidden;">
-            <canvas id="exportChart" width="1200" height="800" style="width: 1200px !important; height: 800px !important;"></canvas>
-        </div>
+    </div>
+
+    <!-- Hidden container for export quality chart -->
+    <div class="export-chart-container" style="position: fixed; top: -9999px; left: -9999px; width: 1200px; height: 800px; background: white; z-index: -1000; visibility: hidden;">
+        <canvas id="exportChart" width="1200" height="800" style="width: 1200px !important; height: 800px !important;"></canvas>
     </div>
 
     <script>
@@ -962,10 +1026,27 @@
         let currentLabels = [];
         let currentData = [];
         
+        // Loading and initialization
+        function showLoadingScreen() {
+            document.getElementById('loadingScreen').classList.remove('hidden');
+            document.getElementById('mainApp').style.display = 'none';
+        }
+        
+        function hideLoadingScreen() {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('mainApp').style.display = 'flex';
+        }
+        
         // Initialize app
         function initializeApp() {
             loadStoredData();
             updateMainSummary();
+            
+            // Simulate loading time
+            setTimeout(() => {
+                hideLoadingScreen();
+                showNotification('Aplikasi siap digunakan!', 'success');
+            }, 2000);
         }
         
         // Storage functions (using in-memory fallback)
@@ -997,7 +1078,6 @@
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
             
             if (pageId === 'main-page') updateMainSummary();
             else if (pageId === 'generate-page') updateGeneratePage();
@@ -1600,8 +1680,11 @@
             }
         });
         
-        // Initialize app
+        // Initialize app on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Show loading screen first
+            showLoadingScreen();
+            
             // Register Chart.js plugin
             if (typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined') {
                 Chart.register(ChartDataLabels);
@@ -1610,8 +1693,10 @@
                 console.error('Chart.js or DataLabels plugin not loaded');
             }
             
-            initializeApp();
-            showNotification('Aplikasi siap digunakan!', 'success');
+            // Initialize app after a delay
+            setTimeout(() => {
+                initializeApp();
+            }, 500);
         });
     </script>
 </body>
