@@ -803,10 +803,10 @@
                         </div>
                     </div>
                     
-                    <!-- Chart Container -->
-                    <div class="chart-container">
-                        <div class="chart-wrapper">
-                            <canvas id="dataChart"></canvas>
+                    <!-- Chart Info Only -->
+                    <div class="text-center mb-4">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Chart telah dibuat dan siap untuk didownload. Preview tidak ditampilkan untuk performa yang lebih baik.
                         </div>
                     </div>
                     
@@ -1212,14 +1212,6 @@
             currentLabels = labels;
             currentData = data;
             
-            const canvas = document.getElementById('dataChart');
-            const ctx = canvas.getContext('2d');
-            
-            if (!ctx) {
-                showNotification('Error: Cannot create chart context', 'error');
-                return;
-            }
-            
             const title = type === 'desa' ? 
                 `DATA JUMLAH PEMERIKSAAN LABORATORIUM PERDESA BULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}` :
                 `DATA PEMERIKSAAN LABORATORIUM BULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}`;
@@ -1233,14 +1225,7 @@
             document.getElementById('chartMaxValue').textContent = maxValue.toLocaleString();
             document.getElementById('chartAverage').textContent = average.toLocaleString();
             
-            if (currentChart) {
-                currentChart.destroy();
-            }
-            
-            const config = getChartConfig(labels, data, type, bulan, tahun, chartType, false);
-            currentChart = new Chart(ctx, config);
-            
-            // Create high-quality export chart
+            // Only create export chart (no preview)
             createExportChart(labels, data, type, bulan, tahun, chartType);
             
             appStats.chartsGenerated++;
