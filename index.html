@@ -244,7 +244,7 @@
             font-size: 0.9rem;
         }
         
-        /* Chart Container - Fixed for mobile */
+        /* Chart Container - FIXED */
         .chart-container {
             background: white;
             border-radius: 10px;
@@ -256,11 +256,18 @@
         
         .chart-wrapper {
             position: relative;
-            height: 600px;
             width: 100%;
-            max-width: 850px;
-            margin: 0 auto;
-            min-height: 500px;
+            height: 0;
+            padding-bottom: 60%; /* 16:10 aspect ratio */
+            overflow: hidden;
+        }
+        
+        .chart-wrapper canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100% !important;
         }
         
         /* Hidden chart for high-quality export */
@@ -377,10 +384,8 @@
                 font-size: 0.85rem;
             }
             
-            .chart-wrapper { 
-                height: 500px; 
-                max-width: 100%;
-                min-height: 500px;
+            .chart-wrapper {
+                padding-bottom: 70%; /* Slightly taller for mobile */
             }
             
             .notification {
@@ -409,7 +414,9 @@
                 font-size: 0.8rem;
             }
             
-            .chart-wrapper { height: 350px; }
+            .chart-wrapper {
+                padding-bottom: 80%; /* Even taller for small mobile */
+            }
         }
         
         /* Utility Classes */
@@ -772,7 +779,7 @@
             </div>
         </div>
         
-<!-- Chart Display -->
+        <!-- Chart Display -->
         <div id="grafik-page" class="page">
             <div class="card fade-in">
                 <div class="card-header">
@@ -848,24 +855,28 @@
             updateMainSummary();
         }
         
-        // Storage functions
+        // Storage functions (using in-memory fallback)
         function loadStoredData() {
             try {
-                const data = localStorage.getItem('storedData');
-                const stats = localStorage.getItem('appStats');
-                if (data) storedData = JSON.parse(data);
-                if (stats) appStats = JSON.parse(stats);
+                if (typeof Storage !== "undefined") {
+                    const data = localStorage.getItem('storedData');
+                    const stats = localStorage.getItem('appStats');
+                    if (data) storedData = JSON.parse(data);
+                    if (stats) appStats = JSON.parse(stats);
+                }
             } catch (e) {
-                console.warn('Failed to load data');
+                console.warn('localStorage not available, using in-memory storage');
             }
         }
         
         function saveData() {
             try {
-                localStorage.setItem('storedData', JSON.stringify(storedData));
-                localStorage.setItem('appStats', JSON.stringify(appStats));
+                if (typeof Storage !== "undefined") {
+                    localStorage.setItem('storedData', JSON.stringify(storedData));
+                    localStorage.setItem('appStats', JSON.stringify(appStats));
+                }
             } catch (e) {
-                console.warn('Failed to save data');
+                console.warn('localStorage not available');
             }
         }
         
@@ -1059,7 +1070,6 @@
             const maxValue = Math.max(...data);
             const singleColor = '#4A90E2';
             const borderColor = '#357ABD';
-            const isMobile = window.innerWidth <= 768;
             
             return {
                 type: chartType,
@@ -1074,19 +1084,19 @@
                             generateColors(data.length).border : borderColor,
                         borderWidth: 1,
                         barThickness: 'flex',
-                        maxBarThickness: isExport ? 50 : (isMobile ? 30 : 40)
+                        maxBarThickness: isExport ? 50 : 40
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,
-                    aspectRatio: isExport ? 1.5 : 1.5, // Consistent landscape ratio
+                    maintainAspectRatio: true,
+                    aspectRatio: isExport ? 1.5 : undefined,
                     layout: {
                         padding: {
-                            top: isExport ? 50 : (isMobile ? 30 : 40),
-                            bottom: isExport ? 120 : (isMobile ? 100 : 100),
-                            left: isExport ? 80 : (isMobile ? 60 : 70),
-                            right: isExport ? 60 : (isMobile ? 40 : 50)
+                            top: isExport ? 50 : 20,
+                            bottom: isExport ? 120 : 80,
+                            left: isExport ? 80 : 40,
+                            right: isExport ? 60 : 40
                         }
                     },
                     plugins: {
@@ -1094,31 +1104,43 @@
                             display: true,
                             text: title.split('\n'),
                             font: { 
-                                size: isExport ? 20 : (isMobile ? 14 : 16),
+                                size: isExport ? 20 : 16,
                                 weight: '600',
                                 family: 'Arial, sans-serif'
                             },
                             color: '#000',
                             padding: { 
                                 top: 10,
-                                bottom: isExport ? 30 : (isMobile ? 20 : 25)
+                                bottom: isExport ? 30 : 20
                             }
                         },
                         legend: {
-                            display: false
+                            display: chartType === 'pie' || chartType === 'doughnut',
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: isExport ? 12 : 10
+                                }
+                            }
                         },
                         datalabels: {
                             display: true,
                             color: '#000',
                             font: {
                                 weight: '600',
-                                size: isExport ? 14 : (isMobile ? 10 : 11),
+                                size: isExport ? 14 : 11,
                                 family: 'Arial, sans-serif'
                             },
-                            anchor: 'end',
-                            align: 'top',
-                            offset: isExport ? 6 : 4,
-                            formatter: function(value) {
+                            anchor: chartType === 'pie' || chartType === 'doughnut' ? 'center' : 'end',
+                            align: chartType === 'pie' || chartType === 'doughnut' ? 'center' : 'top',
+                            offset: chartType === 'pie' || chartType === 'doughnut' ? 0 : 4,
+                            formatter: function(value, context) {
+                                if (chartType === 'pie' || chartType === 'doughnut') {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${value}\n(${percentage}%)`;
+                                }
                                 return value.toString();
                             }
                         }
@@ -1130,7 +1152,7 @@
                             ticks: {
                                 stepSize: Math.ceil(maxValue / 10),
                                 font: { 
-                                    size: isExport ? 14 : (isMobile ? 10 : 11),
+                                    size: isExport ? 14 : 11,
                                     weight: '500',
                                     family: 'Arial, sans-serif'
                                 },
@@ -1154,16 +1176,13 @@
                         x: {
                             ticks: {
                                 maxRotation: 90,
-                                minRotation: 90,
+                                minRotation: 45,
                                 font: { 
-                                    size: isExport ? 12 : (isMobile ? 8 : 10),
+                                    size: isExport ? 12 : 10,
                                     weight: '500',
                                     family: 'Arial, sans-serif'
                                 },
-                                color: '#000',
-                                callback: function(value, index) {
-                                    return this.getLabelForValue(value);
-                                }
+                                color: '#000'
                             },
                             grid: {
                                 display: false
@@ -1193,31 +1212,19 @@
             currentLabels = labels;
             currentData = data;
             
-            const ctx = document.getElementById('dataChart').getContext('2d');
             const canvas = document.getElementById('dataChart');
-            const container = canvas.parentElement;
+            const ctx = canvas.getContext('2d');
             
-            // Set fixed landscape dimensions
-            const isMobile = window.innerWidth <= 768;
-            if (isMobile) {
-                const isSmallMobile = window.innerWidth <= 480;
-                const targetWidth = isSmallMobile ? 350 : 450;
-                const targetHeight = isSmallMobile ? 250 : 300;
-                
-                // Force fixed dimensions
-                container.style.width = targetWidth + 'px';
-                container.style.height = targetHeight + 'px';
-                canvas.style.width = targetWidth + 'px';
-                canvas.style.height = targetHeight + 'px';
-                canvas.width = targetWidth;
-                canvas.height = targetHeight;
+            if (!ctx) {
+                showNotification('Error: Cannot create chart context', 'error');
+                return;
             }
             
             const title = type === 'desa' ? 
-                `DATA JUMLAH PEMERIKSAAN LABORATORIUM PERDESA\nBULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}` :
-                `DATA PEMERIKSAAN LABORATORIUM\nBULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}`;
+                `DATA JUMLAH PEMERIKSAAN LABORATORIUM PERDESA BULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}` :
+                `DATA PEMERIKSAAN LABORATORIUM BULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}`;
             
-            document.getElementById('grafik-info').textContent = title.replace('\n', ' ');
+            document.getElementById('grafik-info').textContent = title;
             
             const maxValue = Math.max(...data);
             const average = Math.round(data.reduce((a, b) => a + b, 0) / data.length);
@@ -1226,16 +1233,11 @@
             document.getElementById('chartMaxValue').textContent = maxValue.toLocaleString();
             document.getElementById('chartAverage').textContent = average.toLocaleString();
             
-            if (currentChart) currentChart.destroy();
-            
-            const config = getChartConfig(labels, data, type, bulan, tahun, chartType, false);
-            
-            // Force non-responsive for mobile with fixed dimensions
-            if (isMobile) {
-                config.options.responsive = false;
-                config.options.maintainAspectRatio = false;
+            if (currentChart) {
+                currentChart.destroy();
             }
             
+            const config = getChartConfig(labels, data, type, bulan, tahun, chartType, false);
             currentChart = new Chart(ctx, config);
             
             // Create high-quality export chart
@@ -1261,7 +1263,9 @@
                 return;
             }
             
-            if (exportChart) exportChart.destroy();
+            if (exportChart) {
+                exportChart.destroy();
+            }
             
             exportChart = new Chart(exportCtx, getChartConfig(labels, data, type, bulan, tahun, chartType, true));
         }
@@ -1272,7 +1276,12 @@
                 'rgba(247, 147, 26, 0.8)',
                 'rgba(76, 201, 240, 0.8)',
                 'rgba(255, 107, 107, 0.8)',
-                'rgba(67, 233, 123, 0.8)'
+                'rgba(67, 233, 123, 0.8)',
+                'rgba(156, 136, 255, 0.8)',
+                'rgba(255, 159, 67, 0.8)',
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(75, 192, 192, 0.8)'
             ];
             
             const bg = [], border = [];
@@ -1310,7 +1319,11 @@
             
             setTimeout(() => {
                 notification.classList.remove('show');
-                setTimeout(() => document.body.removeChild(notification), 300);
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
             }, 3000);
         }
         
@@ -1446,7 +1459,6 @@
         
         document.getElementById('downloadBtn').addEventListener('click', function() {
             if (exportChart) {
-                // Use the high-quality export chart
                 const exportCanvas = document.getElementById('exportChart');
                 
                 if (!exportCanvas) {
@@ -1458,7 +1470,6 @@
                 const tempCanvas = document.createElement('canvas');
                 const tempCtx = tempCanvas.getContext('2d');
                 
-                // Set canvas dimensions
                 tempCanvas.width = exportCanvas.width;
                 tempCanvas.height = exportCanvas.height;
                 
@@ -1486,13 +1497,20 @@
             if (data) {
                 saveAsExcel(data, currentDataType, currentBulan, currentTahun);
                 showNotification('Excel berhasil didownload!', 'success');
+            } else {
+                showNotification('Data tidak tersedia!', 'error');
             }
         });
         
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
             // Register Chart.js plugin
-            Chart.register(ChartDataLabels);
+            if (typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined') {
+                Chart.register(ChartDataLabels);
+                console.log('Chart.js and DataLabels plugin loaded successfully');
+            } else {
+                console.error('Chart.js or DataLabels plugin not loaded');
+            }
             
             initializeApp();
             showNotification('Aplikasi siap digunakan!', 'success');
