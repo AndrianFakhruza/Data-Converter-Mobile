@@ -1,622 +1,21 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Converter Web Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <style>
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-        }
-        
-        html, body {
-            height: 100vh;
-            overflow: hidden;
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #7dd3c0 0%, #47a3a0 50%, #f5e6a3 100%);
-            color: #2d5a5a;
-        }
-        
-        /* Loading Screen */
-        .loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #7dd3c0 0%, #47a3a0 50%, #f5e6a3 100%);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-        
-        .loading-screen.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-        
-        .loader {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        
-        .loading-text {
-            color: white;
-            font-size: 1.2rem;
-            font-weight: 600;
-            text-align: center;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        
-        /* Main Container */
-        .main-container {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 8px;
-            gap: 8px;
-        }
-        
-        /* Header - Fixed Height */
-        .header {
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 12px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(45, 90, 90, 0.15);
-            border: 1px solid rgba(125, 211, 192, 0.3);
-            flex-shrink: 0;
-            height: 80px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        
-        .header h1 {
-            color: #2d5a5a;
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin: 0;
-        }
-        
-        .header p {
-            margin: 0;
-            font-size: 0.8rem;
-            color: #47a3a0;
-        }
-        
-        /* Content Area - Flexible */
-        .content-area {
-            flex: 1;
-            overflow: hidden;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(125, 211, 192, 0.2);
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(45, 90, 90, 0.1);
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .content-header {
-            background: linear-gradient(135deg, #47a3a0, #2d5a5a);
-            color: white;
-            padding: 12px;
-            border-radius: 12px 12px 0 0;
-            flex-shrink: 0;
-        }
-        
-        .content-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin: 0;
-            text-align: center;
-        }
-        
-        .content-body {
-            flex: 1;
-            padding: 12px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* Custom Scrollbar */
-        .content-body::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        .content-body::-webkit-scrollbar-track {
-            background: rgba(245, 230, 163, 0.2);
-        }
-        
-        .content-body::-webkit-scrollbar-thumb {
-            background: #47a3a0;
-            border-radius: 3px;
-        }
-        
-        .content-body::-webkit-scrollbar-thumb:hover {
-            background: #2d5a5a;
-        }
-        
-        /* Summary Grid - Compact */
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 12px;
-            flex-shrink: 0;
-        }
-        
-        .summary-card {
-            background: rgba(255, 255, 255, 0.8);
-            padding: 8px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(45, 90, 90, 0.1);
-            border: 1px solid rgba(125, 211, 192, 0.3);
-            border-left: 4px solid #47a3a0;
-        }
-        
-        .summary-card .number {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #47a3a0;
-            margin-bottom: 2px;
-        }
-        
-        .summary-card .label {
-            color: #2d5a5a;
-            font-size: 0.75rem;
-        }
-        
-        /* Menu Grid - Compact */
-        .menu-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            flex: 1;
-        }
-        
-        .menu-item {
-            background: linear-gradient(135deg, #7dd3c0, #47a3a0);
-            color: white;
-            padding: 12px 8px;
-            border-radius: 10px;
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(71, 163, 160, 0.25);
-            min-height: 80px;
-        }
-        
-        .menu-item:hover {
-            transform: translateY(-2px);
-            color: white;
-            box-shadow: 0 6px 20px rgba(71, 163, 160, 0.35);
-            background: linear-gradient(135deg, #47a3a0, #2d5a5a);
-        }
-        
-        .menu-item:nth-child(2) {
-            background: linear-gradient(135deg, #e6b566, #d4a744);
-        }
-        
-        .menu-item:nth-child(2):hover {
-            background: linear-gradient(135deg, #d4a744, #c19a33);
-        }
-        
-        .menu-item:nth-child(3) {
-            background: linear-gradient(135deg, #f5e6a3, #e6b566);
-        }
-        
-        .menu-item:nth-child(3):hover {
-            background: linear-gradient(135deg, #e6b566, #d4a744);
-        }
-        
-        .menu-item .icon {
-            font-size: 1.5rem;
-            margin-bottom: 6px;
-        }
-        
-        .menu-item .label {
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-        
-        /* Forms - Compact */
-        .form-group {
-            margin-bottom: 10px;
-            flex-shrink: 0;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 4px;
-            font-weight: 600;
-            color: #2d5a5a;
-            font-size: 0.85rem;
-        }
-        
-        .form-control, .form-select {
-            border-radius: 6px;
-            border: 2px solid rgba(125, 211, 192, 0.4);
-            padding: 6px 8px;
-            font-size: 0.85rem;
-            transition: border-color 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
-        }
-        
-        .form-control:focus, .form-select:focus {
-            border-color: #47a3a0;
-            box-shadow: 0 0 0 0.15rem rgba(71, 163, 160, 0.2);
-        }
-        
-        /* Buttons - Compact */
-        .btn {
-            border-radius: 6px;
-            padding: 6px 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: none;
-            margin: 2px;
-            font-size: 0.8rem;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #47a3a0, #2d5a5a);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #2d5a5a, #1a4040);
-        }
-        
-        .btn-success {
-            background: linear-gradient(135deg, #7dd3c0, #47a3a0);
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background: linear-gradient(135deg, #47a3a0, #2d5a5a);
-        }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, #f5e6a3, #e6b566);
-            color: #8b5a00;
-        }
-        
-        .btn-danger:hover {
-            background: linear-gradient(135deg, #e6b566, #d4a744);
-            color: #704700;
-        }
-        
-        .btn-warning {
-            background: linear-gradient(135deg, #e6b566, #d4a744);
-            color: white;
-        }
-        
-        .btn-warning:hover {
-            background: linear-gradient(135deg, #d4a744, #c19a33);
-        }
-        
-        .btn-secondary {
-            background: rgba(245, 230, 163, 0.8);
-            color: #2d5a5a;
-            border: 1px solid rgba(125, 211, 192, 0.3);
-        }
-        
-        .btn-secondary:hover {
-            background: rgba(230, 181, 102, 0.8);
-        }
-        
-        /* Table Container - Flexible */
-        .table-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-        
-        .search-box {
-            position: relative;
-            margin-bottom: 8px;
-            flex-shrink: 0;
-        }
-        
-        .search-box input {
-            padding-left: 30px;
-            border-radius: 20px;
-            border: 2px solid rgba(125, 211, 192, 0.4);
-            background: rgba(255, 255, 255, 0.9);
-            font-size: 0.8rem;
-            height: 32px;
-        }
-        
-        .search-box i {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #47a3a0;
-            font-size: 0.8rem;
-        }
-        
-        .progress {
-            height: 4px;
-            border-radius: 2px;
-            margin: 6px 0;
-            background: rgba(245, 230, 163, 0.4);
-            flex-shrink: 0;
-        }
-        
-        .progress-bar {
-            background: linear-gradient(90deg, #7dd3c0, #47a3a0);
-        }
-        
-        .table-responsive {
-            flex: 1;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(45, 90, 90, 0.1);
-            border: 1px solid rgba(125, 211, 192, 0.3);
-            min-height: 0;
-        }
-        
-        .table {
-            margin: 0;
-            background: white;
-            font-size: 0.75rem;
-        }
-        
-        .table thead th {
-            background: linear-gradient(135deg, #47a3a0, #2d5a5a);
-            color: white;
-            border: none;
-            padding: 8px 4px;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            font-size: 0.75rem;
-        }
-        
-        .table tbody td {
-            padding: 4px;
-            border-top: 1px solid rgba(245, 230, 163, 0.3);
-            vertical-align: middle;
-        }
-        
-        .table tbody tr:hover {
-            background-color: rgba(125, 211, 192, 0.08);
-        }
-        
-        .table input {
-            padding: 2px 4px;
-            font-size: 0.7rem;
-            border: 1px solid rgba(125, 211, 192, 0.4);
-            border-radius: 4px;
-            width: 100%;
-            max-width: 60px;
-        }
-        
-        /* Badge */
-        .badge {
-            padding: 2px 6px;
-            border-radius: 8px;
-            font-size: 0.65rem;
-        }
-        
-        .badge-month {
-            background: linear-gradient(135deg, #47a3a0, #2d5a5a);
-            color: white;
-            margin-bottom: 8px;
-            display: inline-block;
-        }
-        
-        /* Button Container */
-        .button-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            justify-content: center;
-            margin-top: 8px;
-            flex-shrink: 0;
-        }
-        
-        .button-container .btn {
-            flex: 1;
-            min-width: 120px;
-        }
-        
-        /* Notifications */
-        .notification {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            padding: 8px 12px;
-            border-radius: 6px;
-            color: white;
-            font-weight: 500;
-            z-index: 1000;
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-            max-width: 250px;
-            word-wrap: break-word;
-            font-size: 0.8rem;
-        }
-        
-        .notification.show {
-            transform: translateX(0);
-        }
-        
-        .notification.success {
-            background: linear-gradient(135deg, #7dd3c0, #47a3a0);
-        }
-        
-        .notification.error {
-            background: linear-gradient(135deg, #f5e6a3, #e6b566);
-            color: #8b5a00;
-        }
-        
-        .notification.info {
-            background: linear-gradient(135deg, #47a3a0, #2d5a5a);
-        }
-        
-        /* Alert */
-        .alert {
-            padding: 8px 10px;
-            border-radius: 6px;
-            border: none;
-            margin: 8px 0;
-            font-size: 0.8rem;
-        }
-        
-        .alert-success {
-            background: rgba(125, 211, 192, 0.15);
-            color: #2d5a5a;
-            border: 1px solid rgba(125, 211, 192, 0.3);
-            border-left: 4px solid #47a3a0;
-        }
-        
-        /* Utility Classes */
-        .page { 
-            display: none;
-            height: 100%;
-        }
-        .page.active { 
-            display: flex;
-            flex-direction: column;
-        }
-        .text-center { text-align: center; }
-        .d-none { display: none; }
-        
-        /* Mobile Specific */
-        @media (max-width: 768px) {
-            .main-container {
-                padding: 4px;
-                gap: 4px;
-            }
-            
-            .header {
-                height: 60px;
-                padding: 8px;
-            }
-            
-            .header h1 { font-size: 1.1rem; }
-            .header p { font-size: 0.7rem; }
-            
-            .content-header { padding: 8px; }
-            .content-title { font-size: 1rem; }
-            .content-body { padding: 8px; }
-            
-            .summary-grid { gap: 4px; }
-            .summary-card { padding: 6px; }
-            .summary-card .number { font-size: 1rem; }
-            .summary-card .label { font-size: 0.65rem; }
-            
-            .menu-grid { gap: 6px; }
-            .menu-item { 
-                padding: 8px 4px; 
-                min-height: 70px; 
-            }
-            .menu-item .icon { font-size: 1.3rem; }
-            .menu-item .label { font-size: 0.7rem; }
-            
-            .form-group { margin-bottom: 8px; }
-            .form-control, .form-select { 
-                padding: 4px 6px; 
-                font-size: 0.8rem; 
-            }
-            
-            .btn { 
-                padding: 4px 8px; 
-                font-size: 0.75rem;
-                min-width: 100px;
-            }
-            
-            .table { font-size: 0.65rem; }
-            .table thead th, .table tbody td { padding: 2px; }
-            .table input { 
-                max-width: 50px;
-                font-size: 0.65rem;
-            }
-            
-            .notification {
-                right: 4px;
-                left: 4px;
-                transform: translateY(-100%);
-                max-width: none;
-                font-size: 0.75rem;
-                padding: 6px 8px;
-                top: 4px;
-            }
-            
-            .notification.show {
-                transform: translateY(0);
-            }
-        }
-        
-        /* Very Small Screens */
-        @media (max-width: 480px) {
-            .summary-grid { 
-                grid-template-columns: 1fr; 
-                gap: 3px;
-            }
-            
-            .menu-grid { 
-                grid-template-columns: 1fr;
-                gap: 4px;
-            }
-            
-            .menu-item { min-height: 50px; }
-            .menu-item .icon { font-size: 1.1rem; }
-            
-            .button-container .btn { 
-                min-width: 80px;
-                font-size: 0.7rem;
-            }
-        }
-        
-        /* Animations */
-        .fade-in {
-            animation: fadeIn 0.4s ease-in;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
 </head>
+
 <body>
     <!-- Loading Screen -->
     <div class="loading-screen" id="loadingScreen">
@@ -628,1076 +27,378 @@
     </div>
 
     <div class="main-container" id="mainApp" style="display: none;">
-        <!-- Header -->
-        <div class="header fade-in">
-            <h1><i class="fas fa-chart-line"></i> Data Converter</h1>
-            <p>Sistem Laporan Bulanan Mobile-Friendly</p>
-        </div>
-        
-        <!-- Content Area -->
-        <div class="content-area">
+        <!-- Mobile Navigation -->
+        <nav class="mobile-nav">
+            <div class="nav-toggle" id="navToggle">
+                <i class="fas fa-bars"></i>
+            </div>
+            <div class="nav-brand">
+                <i class="fas fa-chart-line"></i>
+                <span>DataConv</span>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="#" class="nav-link active" onclick="showPage('main-page', this)">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-link" onclick="showPage('select-date-desa-page', this)">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Data Desa</span>
+                </a>
+                <a href="#" class="nav-link" onclick="showPage('select-date-pemeriksaan-page', this)">
+                    <i class="fas fa-microscope"></i>
+                    <span>Data Lab</span>
+                </a>
+                <a href="#" class="nav-link" onclick="showPage('generate-page', this)">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Visualisasi</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
             <!-- Main Menu -->
             <div id="main-page" class="page active">
-                <div class="content-header">
-                    <h2 class="content-title">Dashboard Utama</h2>
+                <h1 class="page-title">Dashboard</h1>
+                <p class="page-subtitle">Ringkasan data keseluruhan.</p>
+
+                <div class="summary-grid" id="mainSummary">
+                    <div class="summary-card">
+                        <i class="fas fa-map-marked-alt card-icon"></i>
+                        <div class="number" id="totalDesaData">0</div>
+                        <div class="label">Arsip Data Desa</div>
+                    </div>
+                    <div class="summary-card">
+                        <i class="fas fa-microscope card-icon"></i>
+                        <div class="number" id="totalPemeriksaanData">0</div>
+                        <div class="label">Arsip Data Lab</div>
+                    </div>
+                    <div class="summary-card">
+                        <i class="fas fa-calendar-check card-icon"></i>
+                        <div class="number" id="totalMonths">0</div>
+                        <div class="label">Total Bulan Tercatat</div>
+                    </div>
                 </div>
-                <div class="content-body">
-                    <div class="summary-grid" id="mainSummary">
-                        <div class="summary-card">
-                            <div class="number" id="totalDesaData">0</div>
-                            <div class="label">Data Desa</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="number" id="totalPemeriksaanData">0</div>
-                            <div class="label">Data Lab</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="number" id="totalMonths">0</div>
-                            <div class="label">Bulan Aktif</div>
-                        </div>
-                    </div>
-                    
-                    <div class="menu-grid">
-                        <a href="#" class="menu-item" onclick="showPage('select-date-desa-page')">
-                            <div class="icon"><i class="fas fa-map-marked-alt"></i></div>
-                            <div class="label">Data Desa</div>
-                        </a>
-                        <a href="#" class="menu-item" onclick="showPage('select-date-pemeriksaan-page')">
-                            <div class="icon"><i class="fas fa-microscope"></i></div>
-                            <div class="label">Data Lab</div>
-                        </a>
-                        <a href="#" class="menu-item" onclick="showPage('generate-page')">
-                            <div class="icon"><i class="fas fa-chart-pie"></i></div>
-                            <div class="label">Visualisasi</div>
-                        </a>
-                    </div>
+
+                <div class="welcome-card">
+                    <h2>Selamat Datang!</h2>
+                    <p>Gunakan menu navigasi di sebelah kiri untuk mulai mengelola atau memvisualisasikan data laporan bulanan Anda. Aplikasi ini dirancang untuk kemudahan dan kecepatan.</p>
+                    <button class="btn btn-primary" onclick="showPage('select-date-desa-page', document.getElementById('nav-select-date-desa-page'))">
+                        <i class="fas fa-plus-circle"></i> Mulai Input Data
+                    </button>
                 </div>
             </div>
-            
+
             <!-- Select Date for Desa -->
             <div id="select-date-desa-page" class="page">
-                <div class="content-header">
-                    <h2 class="content-title">Pilih Periode Data Desa</h2>
-                </div>
-                <div class="content-body">
-                    <form id="selectDateDesaForm">
-                        <div class="form-group">
-                            <label><i class="fas fa-calendar-alt"></i> Bulan</label>
-                            <select class="form-select" id="desaBulan" required>
-                                <option value="">-- Pilih Bulan --</option>
-                                <option value="01">Januari</option>
-                                <option value="02">Februari</option>
-                                <option value="03">Maret</option>
-                                <option value="04">April</option>
-                                <option value="05">Mei</option>
-                                <option value="06">Juni</option>
-                                <option value="07">Juli</option>
-                                <option value="08">Agustus</option>
-                                <option value="09">September</option>
-                                <option value="10">Oktober</option>
-                                <option value="11">November</option>
-                                <option value="12">Desember</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label><i class="fas fa-calendar"></i> Tahun</label>
-                            <input type="number" class="form-control" id="desaTahun" value="2025" min="2020" max="2030" required>
-                        </div>
-                        <div class="button-container">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-arrow-right"></i> Lanjutkan
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="showPage('main-page')">
-                                <i class="fas fa-home"></i> Dashboard
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                <h1 class="page-title">Pilih Periode Data Desa</h1>
+                <p class="page-subtitle">Tentukan bulan dan tahun untuk input data desa.</p>
+                <form id="selectDateDesaForm" class="form-card">
+                    <div class="form-group">
+                        <label for="desaBulan"><i class="fas fa-calendar-alt"></i> Bulan</label>
+                        <select class="form-select" id="desaBulan" required>
+                            <option value="">-- Pilih Bulan --</option>
+                            <option value="01">Januari</option>
+                            <option value="02">Februari</option>
+                            <option value="03">Maret</option>
+                            <option value="04">April</option>
+                            <option value="05">Mei</option>
+                            <option value="06">Juni</option>
+                            <option value="07">Juli</option>
+                            <option value="08">Agustus</option>
+                            <option value="09">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="desaTahun"><i class="fas fa-calendar"></i> Tahun</label>
+                        <input type="number" class="form-control" id="desaTahun" value="2025" min="2020" max="2030" required>
+                    </div>
+                    <div class="button-container">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-arrow-right"></i> Lanjutkan
+                        </button>
+                    </div>
+                </form>
             </div>
-            
+
             <!-- Input Desa Data -->
             <div id="input-desa-page" class="page">
-                <div class="content-header">
-                    <h2 class="content-title">Input Data Desa</h2>
+                <h1 class="page-title">Input Data Desa</h1>
+                <p class="page-subtitle">Periode: <span id="current-bulan-desa"></span> <span id="current-tahun-desa"></span></p>
+
+                <div class="summary-grid d-none" id="desaSummary">
+                    <div class="summary-card">
+                        <div class="number" id="totalDesaCount">0</div>
+                        <div class="label">Total Desa</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="number" id="filledDesaCount">0</div>
+                        <div class="label">Terisi</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="number" id="totalDesaValue">0</div>
+                        <div class="label">Total</div>
+                    </div>
                 </div>
-                <div class="content-body">
-                    <div class="text-center">
-                        <span class="badge badge-month">
-                            Periode: <span id="current-bulan-desa"></span> <span id="current-tahun-desa"></span>
-                        </span>
-                    </div>
-                    
-                    <div class="summary-grid d-none" id="desaSummary">
-                        <div class="summary-card">
-                            <div class="number" id="totalDesaCount">0</div>
-                            <div class="label">Total Desa</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="number" id="filledDesaCount">0</div>
-                            <div class="label">Terisi</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="number" id="totalDesaValue">0</div>
-                            <div class="label">Total</div>
-                        </div>
-                    </div>
-                    
-                    <div class="table-container">
+
+                <div class="table-container">
+                    <div class="table-toolbar">
                         <div class="search-box">
                             <i class="fas fa-search"></i>
                             <input type="text" class="form-control" id="search-desa" placeholder="Cari desa..." onkeyup="searchTable('desa')">
                         </div>
-                        
-                        <div class="progress">
-                            <div class="progress-bar" id="desaProgress" style="width: 0%"></div>
+                        <div class="toolbar-buttons">
+                            <button type="button" class="btn btn-warning" onclick="autoFillDesa()"><i class="fas fa-magic"></i> Sample</button>
+                            <button type="button" class="btn btn-danger" onclick="clearDesaForm()"><i class="fas fa-eraser"></i> Reset</button>
                         </div>
-                        
-                        <form id="desaForm">
-                            <div class="table-responsive">
-                                <table class="table" id="desa-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Nama Desa</th>
-                                            <th>Jumlah</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="desa-table-body"></tbody>
-                                </table>
-                            </div>
-                        </form>
                     </div>
-                    
-                    <div class="button-container">
-                        <button type="submit" form="desaForm" class="btn btn-success">
-                            <i class="fas fa-save"></i> Simpan
-                        </button>
-                        <button type="button" class="btn btn-danger" onclick="clearDesaForm()">
-                            <i class="fas fa-eraser"></i> Reset
-                        </button>
-                        <button type="button" class="btn btn-warning" onclick="autoFillDesa()">
-                            <i class="fas fa-magic"></i> Sample
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="showPage('select-date-desa-page')">
-                            <i class="fas fa-arrow-left"></i> Kembali
-                        </button>
+
+                    <div class="progress">
+                        <div class="progress-bar" id="desaProgress" style="width: 0%"></div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Select Date for Pemeriksaan -->
-            <div id="select-date-pemeriksaan-page" class="page">
-                <div class="content-header">
-                    <h2 class="content-title">Pilih Periode Data Lab</h2>
-                </div>
-                <div class="content-body">
-                    <form id="selectDatePemeriksaanForm">
-                        <div class="form-group">
-                            <label><i class="fas fa-calendar-alt"></i> Bulan</label>
-                            <select class="form-select" id="pemeriksaanBulan" required>
-                                <option value="">-- Pilih Bulan --</option>
-                                <option value="01">Januari</option>
-                                <option value="02">Februari</option>
-                                <option value="03">Maret</option>
-                                <option value="04">April</option>
-                                <option value="05">Mei</option>
-                                <option value="06">Juni</option>
-                                <option value="07">Juli</option>
-                                <option value="08">Agustus</option>
-                                <option value="09">September</option>
-                                <option value="10">Oktober</option>
-                                <option value="11">November</option>
-                                <option value="12">Desember</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label><i class="fas fa-calendar"></i> Tahun</label>
-                            <input type="number" class="form-control" id="pemeriksaanTahun" value="2025" min="2020" max="2030" required>
-                        </div>
-                        <div class="button-container">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-arrow-right"></i> Lanjutkan
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="showPage('main-page')">
-                                <i class="fas fa-home"></i> Dashboard
-                            </button>
+
+                    <form id="desaForm">
+                        <div class="table-responsive">
+                            <table class="table" id="desa-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nama Desa</th>
+                                        <th>Jumlah</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="desa-table-body"></tbody>
+                            </table>
                         </div>
                     </form>
+
+                    <div class="button-container">
+                        <button type="button" class="btn btn-secondary" onclick="showPage('select-date-desa-page', document.getElementById('nav-select-date-desa-page'))">
+                            <i class="fas fa-arrow-left"></i> Kembali
+                        </button>
+                        <button type="submit" form="desaForm" class="btn btn-success">
+                            <i class="fas fa-save"></i> Simpan & Ekspor
+                        </button>
+                    </div>
                 </div>
             </div>
-            
+
+            <!-- Select Date for Pemeriksaan -->
+            <div id="select-date-pemeriksaan-page" class="page">
+                <h1 class="page-title">Pilih Periode Data Lab</h1>
+                <p class="page-subtitle">Tentukan bulan dan tahun untuk input data laboratorium.</p>
+                <form id="selectDatePemeriksaanForm" class="form-card">
+                    <div class="form-group">
+                        <label for="pemeriksaanBulan"><i class="fas fa-calendar-alt"></i> Bulan</label>
+                        <select class="form-select" id="pemeriksaanBulan" required>
+                            <option value="">-- Pilih Bulan --</option>
+                            <option value="01">Januari</option>
+                            <option value="02">Februari</option>
+                            <option value="03">Maret</option>
+                            <option value="04">April</option>
+                            <option value="05">Mei</option>
+                            <option value="06">Juni</option>
+                            <option value="07">Juli</option>
+                            <option value="08">Agustus</option>
+                            <option value="09">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="pemeriksaanTahun"><i class="fas fa-calendar"></i> Tahun</label>
+                        <input type="number" class="form-control" id="pemeriksaanTahun" value="2025" min="2020" max="2030" required>
+                    </div>
+                    <div class="button-container">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-arrow-right"></i> Lanjutkan
+                        </button>
+                    </div>
+                </form>
+            </div>
+
             <!-- Input Pemeriksaan Data -->
             <div id="input-pemeriksaan-page" class="page">
-                <div class="content-header">
-                    <h2 class="content-title">Input Data Lab</h2>
+                <h1 class="page-title">Input Data Lab</h1>
+                <p class="page-subtitle">Periode: <span id="current-bulan-pemeriksaan"></span> <span id="current-tahun-pemeriksaan"></span></p>
+
+                <div class="summary-grid d-none" id="pemeriksaanSummary">
+                    <div class="summary-card">
+                        <div class="number" id="totalPemeriksaanCount">0</div>
+                        <div class="label">Jenis Test</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="number" id="filledPemeriksaanCount">0</div>
+                        <div class="label">Terisi</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="number" id="totalPemeriksaanValue">0</div>
+                        <div class="label">Total</div>
+                    </div>
                 </div>
-                <div class="content-body">
-                    <div class="text-center">
-                        <span class="badge badge-month">
-                            Periode: <span id="current-bulan-pemeriksaan"></span> <span id="current-tahun-pemeriksaan"></span>
-                        </span>
-                    </div>
-                    
-                    <div class="summary-grid d-none" id="pemeriksaanSummary">
-                        <div class="summary-card">
-                            <div class="number" id="totalPemeriksaanCount">0</div>
-                            <div class="label">Jenis Test</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="number" id="filledPemeriksaanCount">0</div>
-                            <div class="label">Terisi</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="number" id="totalPemeriksaanValue">0</div>
-                            <div class="label">Total</div>
-                        </div>
-                    </div>
-                    
-                    <div class="table-container">
+
+                <div class="table-container">
+                    <div class="table-toolbar">
                         <div class="search-box">
                             <i class="fas fa-search"></i>
                             <input type="text" class="form-control" id="search-pemeriksaan" placeholder="Cari pemeriksaan..." onkeyup="searchTable('pemeriksaan')">
                         </div>
-                        
-                        <div class="progress">
-                            <div class="progress-bar" id="pemeriksaanProgress" style="width: 0%"></div>
+                        <div class="toolbar-buttons">
+                            <button type="button" class="btn btn-warning" onclick="autoFillPemeriksaan()"><i class="fas fa-magic"></i> Sample</button>
+                            <button type="button" class="btn btn-danger" onclick="clearPemeriksaanForm()"><i class="fas fa-eraser"></i> Reset</button>
                         </div>
-                        
-                        <form id="pemeriksaanForm">
-                            <div class="table-responsive">
-                                <table class="table" id="pemeriksaan-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Jenis Pemeriksaan</th>
-                                            <th>Jumlah</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="pemeriksaan-table-body"></tbody>
-                                </table>
+                    </div>
+
+                    <div class="progress">
+                        <div class="progress-bar" id="pemeriksaanProgress" style="width: 0%"></div>
+                    </div>
+
+                    <form id="pemeriksaanForm">
+                        <div class="table-responsive">
+                            <table class="table" id="pemeriksaan-table">
+                                <thead>
+                                    <tr>
+                                        <th>Jenis Pemeriksaan</th>
+                                        <th>Jumlah</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pemeriksaan-table-body"></tbody>
+                            </table>
+                        </div>
+                    </form>
+
+                    <div class="button-container">
+                        <button type="button" class="btn btn-secondary" onclick="showPage('select-date-pemeriksaan-page', document.getElementById('nav-select-date-pemeriksaan-page'))">
+                            <i class="fas fa-arrow-left"></i> Kembali
+                        </button>
+                        <button type="submit" form="pemeriksaanForm" class="btn btn-success">
+                            <i class="fas fa-save"></i> Simpan & Ekspor
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generate Chart -->
+            <div id="generate-page" class="page">
+                <h1 class="page-title">Visualisasi Data</h1>
+                <p class="page-subtitle">Buat grafik dari data yang tersimpan.</p>
+
+                <div class="content-split">
+                    <div class="form-container">
+                        <form id="generateForm" class="form-card">
+                            <div class="form-group">
+                                <label for="dataType"><i class="fas fa-database"></i> Jenis Data</label>
+                                <select class="form-select" id="dataType" required onchange="updateAvailableMonths()">
+                                    <option value="">-- Pilih Data --</option>
+                                    <option value="desa">Data Desa</option>
+                                    <option value="pemeriksaan">Data Lab</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="generateBulan"><i class="fas fa-calendar-alt"></i> Bulan</label>
+                                <select class="form-select" id="generateBulan" required>
+                                    <option value="">-- Pilih Bulan --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="generateTahun"><i class="fas fa-calendar"></i> Tahun</label>
+                                <input type="number" class="form-control" id="generateTahun" value="2025" min="2020" max="2030" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="chartType"><i class="fas fa-chart-pie"></i> Tipe Chart</label>
+                                <select class="form-select" id="chartType" required>
+                                    <option value="">-- Pilih Chart --</option>
+                                    <option value="bar">Bar Chart</option>
+                                    <option value="pie">Pie Chart</option>
+                                    <option value="line">Line Chart</option>
+                                    <option value="doughnut">Doughnut Chart</option>
+                                </select>
+                            </div>
+                            <div class="button-container">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-sync-alt"></i> Generate Chart
+                                </button>
                             </div>
                         </form>
                     </div>
-                    
-                    <div class="button-container">
-                        <button type="submit" form="pemeriksaanForm" class="btn btn-success">
-                            <i class="fas fa-save"></i> Simpan
-                        </button>
-                        <button type="button" class="btn btn-danger" onclick="clearPemeriksaanForm()">
-                            <i class="fas fa-eraser"></i> Reset
-                        </button>
-                        <button type="button" class="btn btn-warning" onclick="autoFillPemeriksaan()">
-                            <i class="fas fa-magic"></i> Sample
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="showPage('select-date-pemeriksaan-page')">
-                            <i class="fas fa-arrow-left"></i> Kembali
-                        </button>
+                    <div class="info-container">
+                        <div class="summary-grid">
+                            <div class="summary-card">
+                                <div class="number" id="availableDesaMonths">0</div>
+                                <div class="label">Arsip Desa</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="number" id="availablePemeriksaanMonths">0</div>
+                                <div class="label">Arsip Lab</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="number" id="totalCharts">0</div>
+                                <div class="label">Chart Dibuat</div>
+                            </div>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Pilih jenis data, periode, dan tipe chart untuk membuat visualisasi. Pastikan data untuk periode yang dipilih sudah diinput sebelumnya.
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Generate Chart -->
-            <div id="generate-page" class="page">
-                <div class="content-header">
-                    <h2 class="content-title">Visualisasi Data</h2>
-                </div>
-                <div class="content-body">
-                    <div class="summary-grid">
-                        <div class="summary-card">
-                            <div class="number" id="availableDesaMonths">0</div>
-                            <div class="label">Data Desa</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="number" id="availablePemeriksaanMonths">0</div>
-                            <div class="label">Data Lab</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="number" id="totalCharts">0</div>
-                            <div class="label">Charts</div>
-                        </div>
-                    </div>
-                    
-                    <form id="generateForm">
-                        <div class="form-group">
-                            <label><i class="fas fa-chart-bar"></i> Jenis Data</label>
-                            <select class="form-select" id="dataType" required onchange="updateAvailableMonths()">
-                                <option value="">-- Pilih Data --</option>
-                                <option value="desa">Data Desa</option>
-                                <option value="pemeriksaan">Data Lab</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label><i class="fas fa-calendar-alt"></i> Bulan</label>
-                            <select class="form-select" id="generateBulan" required>
-                                <option value="">-- Pilih Bulan --</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label><i class="fas fa-calendar"></i> Tahun</label>
-                            <input type="number" class="form-control" id="generateTahun" value="2025" min="2020" max="2030" required>
-                        </div>
-                        <div class="form-group">
-                            <label><i class="fas fa-chart-pie"></i> Tipe Chart</label>
-                            <select class="form-select" id="chartType" required>
-                                <option value="">-- Pilih Chart --</option>
-                                <option value="bar">Bar Chart</option>
-                                <option value="pie">Pie Chart</option>
-                                <option value="line">Line Chart</option>
-                                <option value="doughnut">Doughnut Chart</option>
-                            </select>
-                        </div>
-                        <div class="button-container">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-chart-bar"></i> Generate Chart
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="showPage('main-page')">
-                                <i class="fas fa-home"></i> Dashboard
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            
+
             <!-- Chart Display -->
             <div id="grafik-page" class="page">
-                <div class="content-header">
-                    <h2 class="content-title">Visualisasi Data</h2>
+                <h1 class="page-title">Hasil Visualisasi</h1>
+                <p class="page-subtitle" id="grafik-info"></p>
+
+                <div class="summary-grid" id="chartSummary">
+                    <div class="summary-card">
+                        <div class="number" id="chartDataPoints">0</div>
+                        <div class="label">Data Points</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="number" id="chartMaxValue">0</div>
+                        <div class="label">Nilai Tertinggi</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="number" id="chartAverage">0</div>
+                        <div class="label">Nilai Rata-rata</div>
+                    </div>
                 </div>
-                <div class="content-body">
-                    <p class="text-center" id="grafik-info" style="font-size: 0.8rem; margin-bottom: 8px;"></p>
-                    
-                    <div class="summary-grid" id="chartSummary">
-                        <div class="summary-card">
-                            <div class="number" id="chartDataPoints">0</div>
-                            <div class="label">Data Points</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="number" id="chartMaxValue">0</div>
-                            <div class="label">Tertinggi</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="number" id="chartAverage">0</div>
-                            <div class="label">Rata-rata</div>
-                        </div>
-                    </div>
-                    
-                    <div class="text-center" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i> Chart berhasil dibuat! Silakan download menggunakan tombol di bawah ini.
-                        </div>
-                    </div>
-                    
-                    <div class="button-container">
-                        <button id="downloadBtn" class="btn btn-warning">
-                            <i class="fas fa-download"></i> Download PNG
-                        </button>
-                        <button id="downloadExcelBtn" class="btn btn-success">
-                            <i class="fas fa-file-excel"></i> Excel
-                        </button>
-                        <button class="btn btn-secondary" onclick="showPage('generate-page')">
-                            <i class="fas fa-arrow-left"></i> Kembali
-                        </button>
-                    </div>
+
+                <div class="chart-placeholder">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>Chart Berhasil Dibuat</h3>
+                    <p>Gunakan tombol di bawah untuk mengunduh hasilnya dalam format PNG atau Excel.</p>
+                </div>
+
+                <div class="button-container">
+                    <button class="btn btn-secondary" onclick="showPage('generate-page', document.getElementById('nav-generate-page'))">
+                        <i class="fas fa-arrow-left"></i> Kembali
+                    </button>
+                    <button id="downloadExcelBtn" class="btn btn-success">
+                        <i class="fas fa-file-excel"></i> Download Excel
+                    </button>
+                    <button id="downloadBtn" class="btn btn-warning">
+                        <i class="fas fa-download"></i> Download PNG
+                    </button>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 
     <!-- Hidden container for export quality chart -->
-    <div class="export-chart-container" style="position: fixed; top: -9999px; left: -9999px; width: 1200px; height: 800px; background: white; z-index: -1000; visibility: hidden;">
-        <canvas id="exportChart" width="1200" height="800" style="width: 1200px !important; height: 800px !important;"></canvas>
+    <div class="export-chart-container"
+        style="position: fixed; top: -9999px; left: -9999px; width: 1200px; height: 800px; background: white; z-index: -1000; visibility: hidden;">
+        <canvas id="exportChart" width="1200" height="800"
+            style="width: 1200px !important; height: 800px !important;"></canvas>
     </div>
 
-    <script>
-        // Data arrays
-        const desaList = ["SIDO MULYO", "CEMPEDAK", "BAYU", "BL. TALON", "BUKET", "COT MERBO", "COT RHEU", "LHOKJOK", "MEUNASAH DAYAH", "PULO BARAT", "MEUNASAH KUMBANG", "Panton Rayek 1", "KR. SEPENG", "BL. GURAH", "CEMECET", "KR. MANYANG", "SEUNEBOK DRIEN", "BL. ADO", "BL. ARA", "COT SEUTUI", "ALU RAMBE", "MULING MEUCAT", "KRESEK", "PULO RAYEUK", "LANGKUTA", "BL. RIEK", "FASKES LAIN", "BABAH LUENG", "GUHA ULHEU", "KR. SENONG", "MC. BAHAGIA", "MEUNASAH KULAM", "KD. KRUENG", "COT SEMIYONG", "PULO IBOH", "KEUDE BLANG ARA", "MEURIYA", "P. RAYEUK 2", "MULING MANYANG", "SAWEUK"];
-        
-        const pemeriksaanList = ["CHOLESTEROL", "KADAR GULA DARAH", "TBC", "SIPILIS", "HIV", "HBSAG", "WIDAL", "ASAM URAT", "DARAH RUTIN", "URINALISA", "GOLONGAN DARAH", "CAMPAK", "MALARIA", "TRIGLISERIDA", "DBD", "SGOT", "SGPT", "T.PROTEIN", "R.FAKTOR", "CREATININT", "UREA", "ALBUMIN", "BIL.DIRECT"];
-        
-        // Global variables
-        let currentChart = null;
-        let exportChart = null;
-        let currentBulan = "";
-        let currentTahun = "";
-        let currentDataType = "";
-        let currentChartType = "bar";
-        let storedData = { desa: {}, pemeriksaan: {} };
-        let appStats = { totalRecords: 0, chartsGenerated: 0 };
-        let currentLabels = [];
-        let currentData = [];
-        
-        // Loading and initialization
-        function showLoadingScreen() {
-            document.getElementById('loadingScreen').classList.remove('hidden');
-            document.getElementById('mainApp').style.display = 'none';
-        }
-        
-        function hideLoadingScreen() {
-            document.getElementById('loadingScreen').classList.add('hidden');
-            document.getElementById('mainApp').style.display = 'flex';
-        }
-        
-        // Initialize app
-        function initializeApp() {
-            loadStoredData();
-            updateMainSummary();
-            
-            // Simulate loading time
-            setTimeout(() => {
-                hideLoadingScreen();
-                showNotification('Aplikasi siap digunakan!', 'success');
-            }, 2000);
-        }
-        
-        // Storage functions (using in-memory fallback)
-        function loadStoredData() {
-            try {
-                if (typeof Storage !== "undefined") {
-                    const data = localStorage.getItem('storedData');
-                    const stats = localStorage.getItem('appStats');
-                    if (data) storedData = JSON.parse(data);
-                    if (stats) appStats = JSON.parse(stats);
-                }
-            } catch (e) {
-                console.warn('localStorage not available, using in-memory storage');
-            }
-        }
-        
-        function saveData() {
-            try {
-                if (typeof Storage !== "undefined") {
-                    localStorage.setItem('storedData', JSON.stringify(storedData));
-                    localStorage.setItem('appStats', JSON.stringify(appStats));
-                }
-            } catch (e) {
-                console.warn('localStorage not available');
-            }
-        }
-        
-        // Page navigation
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            
-            if (pageId === 'main-page') updateMainSummary();
-            else if (pageId === 'generate-page') updateGeneratePage();
-        }
-        
-        // Search functionality
-        function searchTable(type) {
-            const input = document.getElementById(`search-${type}`);
-            const filter = input.value.toUpperCase();
-            const rows = document.querySelectorAll(`#${type}-table-body tr`);
-            
-            let visible = 0;
-            rows.forEach(row => {
-                const text = row.cells[0].textContent.toUpperCase();
-                const show = text.includes(filter);
-                row.style.display = show ? '' : 'none';
-                if (show) visible++;
-            });
-            
-            if (filter) showNotification(`${visible} hasil ditemukan`, 'info');
-        }
-        
-        // Table functions
-        function fillDesaTable() {
-            const tbody = document.getElementById('desa-table-body');
-            const bulanTahun = `${currentBulan}-${currentTahun}`;
-            const existingData = storedData.desa[bulanTahun] || {};
-            
-            tbody.innerHTML = '';
-            desaList.forEach(desa => {
-                const row = tbody.insertRow();
-                row.innerHTML = `
-                    <td><strong>${desa}</strong></td>
-                    <td><input type="number" class="form-control form-control-sm" name="${desa}" value="${existingData[desa] || '0'}" min="0" oninput="updateDesaSummary()"></td>
-                    <td><span class="badge ${(existingData[desa] || 0) > 0 ? 'bg-success' : 'bg-secondary'}">${(existingData[desa] || 0) > 0 ? 'Terisi' : 'Kosong'}</span></td>
-                `;
-            });
-            
-            updateDesaSummary();
-            document.getElementById('desaSummary').classList.remove('d-none');
-        }
-        
-        function fillPemeriksaanTable() {
-            const tbody = document.getElementById('pemeriksaan-table-body');
-            const bulanTahun = `${currentBulan}-${currentTahun}`;
-            const existingData = storedData.pemeriksaan[bulanTahun] || {};
-            
-            tbody.innerHTML = '';
-            pemeriksaanList.forEach(item => {
-                const row = tbody.insertRow();
-                row.innerHTML = `
-                    <td><strong>${item}</strong></td>
-                    <td><input type="number" class="form-control form-control-sm" name="${item}" value="${existingData[item] || '0'}" min="0" oninput="updatePemeriksaanSummary()"></td>
-                    <td><span class="badge ${(existingData[item] || 0) > 0 ? 'bg-success' : 'bg-secondary'}">${(existingData[item] || 0) > 0 ? 'Terisi' : 'Kosong'}</span></td>
-                `;
-            });
-            
-            updatePemeriksaanSummary();
-            document.getElementById('pemeriksaanSummary').classList.remove('d-none');
-        }
-        
-        // Summary updates
-        function updateDesaSummary() {
-            const inputs = document.querySelectorAll('#desa-table-body input');
-            let total = 0, filled = 0;
-            
-            inputs.forEach(input => {
-                const value = parseInt(input.value) || 0;
-                total += value;
-                if (value > 0) filled++;
-                
-                const badge = input.closest('tr').querySelector('.badge');
-                badge.className = `badge ${value > 0 ? 'bg-success' : 'bg-secondary'}`;
-                badge.textContent = value > 0 ? 'Terisi' : 'Kosong';
-            });
-            
-            document.getElementById('totalDesaCount').textContent = desaList.length;
-            document.getElementById('filledDesaCount').textContent = filled;
-            document.getElementById('totalDesaValue').textContent = total.toLocaleString();
-            document.getElementById('desaProgress').style.width = `${(filled / desaList.length) * 100}%`;
-        }
-        
-        function updatePemeriksaanSummary() {
-            const inputs = document.querySelectorAll('#pemeriksaan-table-body input');
-            let total = 0, filled = 0;
-            
-            inputs.forEach(input => {
-                const value = parseInt(input.value) || 0;
-                total += value;
-                if (value > 0) filled++;
-                
-                const badge = input.closest('tr').querySelector('.badge');
-                badge.className = `badge ${value > 0 ? 'bg-success' : 'bg-secondary'}`;
-                badge.textContent = value > 0 ? 'Terisi' : 'Kosong';
-            });
-            
-            document.getElementById('totalPemeriksaanCount').textContent = pemeriksaanList.length;
-            document.getElementById('filledPemeriksaanCount').textContent = filled;
-            document.getElementById('totalPemeriksaanValue').textContent = total.toLocaleString();
-            document.getElementById('pemeriksaanProgress').style.width = `${(filled / pemeriksaanList.length) * 100}%`;
-        }
-        
-        function updateMainSummary() {
-            const desaCount = Object.keys(storedData.desa).length;
-            const labCount = Object.keys(storedData.pemeriksaan).length;
-            const totalMonths = new Set([...Object.keys(storedData.desa), ...Object.keys(storedData.pemeriksaan)]).size;
-            
-            document.getElementById('totalDesaData').textContent = desaCount;
-            document.getElementById('totalPemeriksaanData').textContent = labCount;
-            document.getElementById('totalMonths').textContent = totalMonths;
-        }
-        
-        function updateGeneratePage() {
-            document.getElementById('availableDesaMonths').textContent = Object.keys(storedData.desa).length;
-            document.getElementById('availablePemeriksaanMonths').textContent = Object.keys(storedData.pemeriksaan).length;
-            document.getElementById('totalCharts').textContent = appStats.chartsGenerated;
-        }
-        
-        // Auto-fill functions
-        function autoFillDesa() {
-            document.querySelectorAll('#desa-table-body input').forEach(input => {
-                input.value = Math.floor(Math.random() * 100) + 1;
-            });
-            updateDesaSummary();
-            showNotification('Sample data desa berhasil di-generate!', 'success');
-        }
-        
-        function autoFillPemeriksaan() {
-            document.querySelectorAll('#pemeriksaan-table-body input').forEach(input => {
-                input.value = Math.floor(Math.random() * 200) + 1;
-            });
-            updatePemeriksaanSummary();
-            showNotification('Sample data lab berhasil di-generate!', 'success');
-        }
-        
-        // Clear functions
-        function clearDesaForm() {
-            document.querySelectorAll('#desa-table-body input').forEach(input => input.value = '0');
-            updateDesaSummary();
-            showNotification('Form desa di-reset!', 'info');
-        }
-        
-        function clearPemeriksaanForm() {
-            document.querySelectorAll('#pemeriksaan-table-body input').forEach(input => input.value = '0');
-            updatePemeriksaanSummary();
-            showNotification('Form lab di-reset!', 'info');
-        }
-        
-        // Chart functions
-        function updateAvailableMonths() {
-            const dataType = document.getElementById('dataType').value;
-            const select = document.getElementById('generateBulan');
-            
-            select.innerHTML = '<option value="">-- Pilih Bulan --</option>';
-            
-            if (!dataType) return;
-            
-            const months = new Set();
-            Object.keys(storedData[dataType]).forEach(key => {
-                months.add(key.split('-')[0]);
-            });
-            
-            const monthNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-            
-            Array.from(months).sort().forEach(month => {
-                const option = document.createElement('option');
-                option.value = month;
-                option.textContent = monthNames[parseInt(month)];
-                select.appendChild(option);
-            });
-        }
-        
-        function getNamaBulan(bulan) {
-            const names = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-            return names[parseInt(bulan)];
-        }
-        
-        function getChartConfig(labels, data, type, bulan, tahun, chartType, isExport = false) {
-            const title = type === 'desa' ? 
-                `DATA JUMLAH PEMERIKSAAN LABORATORIUM PERDESA\nBULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}` :
-                `DATA PEMERIKSAAN LABORATORIUM\nBULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}`;
-            
-            const maxValue = Math.max(...data);
-            const singleColor = '#4A90E2';
-            const borderColor = '#357ABD';
-            
-            return {
-                type: chartType,
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Jumlah',
-                        data: data,
-                        backgroundColor: chartType === 'pie' || chartType === 'doughnut' ? 
-                            generateColors(data.length).bg : singleColor,
-                        borderColor: chartType === 'pie' || chartType === 'doughnut' ? 
-                            generateColors(data.length).border : borderColor,
-                        borderWidth: 1,
-                        barThickness: 'flex',
-                        maxBarThickness: isExport ? 50 : 40
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    aspectRatio: isExport ? 1.5 : undefined,
-                    layout: {
-                        padding: {
-                            top: isExport ? 50 : 20,
-                            bottom: isExport ? 120 : 80,
-                            left: isExport ? 80 : 40,
-                            right: isExport ? 60 : 40
-                        }
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: title.split('\n'),
-                            font: { 
-                                size: isExport ? 20 : 16,
-                                weight: '600',
-                                family: 'Arial, sans-serif'
-                            },
-                            color: '#000',
-                            padding: { 
-                                top: 10,
-                                bottom: isExport ? 30 : 20
-                            }
-                        },
-                        legend: {
-                            display: chartType === 'pie' || chartType === 'doughnut',
-                            position: 'bottom',
-                            labels: {
-                                padding: 15,
-                                font: {
-                                    size: isExport ? 12 : 10
-                                }
-                            }
-                        },
-                        datalabels: {
-                            display: true,
-                            color: '#000',
-                            font: {
-                                weight: '600',
-                                size: isExport ? 14 : 11,
-                                family: 'Arial, sans-serif'
-                            },
-                            anchor: chartType === 'pie' || chartType === 'doughnut' ? 'center' : 'end',
-                            align: chartType === 'pie' || chartType === 'doughnut' ? 'center' : 'top',
-                            offset: chartType === 'pie' || chartType === 'doughnut' ? 0 : 4,
-                            formatter: function(value, context) {
-                                if (chartType === 'pie' || chartType === 'doughnut') {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = ((value / total) * 100).toFixed(1);
-                                    return `${value}\n(${percentage}%)`;
-                                }
-                                return value.toString();
-                            }
-                        }
-                    },
-                    scales: ['bar', 'line'].includes(chartType) ? {
-                        y: {
-                            beginAtZero: true,
-                            max: Math.ceil(maxValue * 1.15),
-                            ticks: {
-                                stepSize: Math.ceil(maxValue / 10),
-                                font: { 
-                                    size: isExport ? 14 : 11,
-                                    weight: '500',
-                                    family: 'Arial, sans-serif'
-                                },
-                                color: '#000',
-                                callback: function(value) {
-                                    return value.toString();
-                                }
-                            },
-                            grid: {
-                                color: '#E0E0E0',
-                                lineWidth: 1,
-                                drawBorder: true,
-                                borderColor: '#000',
-                                borderWidth: 2
-                            },
-                            border: {
-                                color: '#000',
-                                width: 2
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                maxRotation: 90,
-                                minRotation: 45,
-                                font: { 
-                                    size: isExport ? 12 : 10,
-                                    weight: '500',
-                                    family: 'Arial, sans-serif'
-                                },
-                                color: '#000'
-                            },
-                            grid: {
-                                display: false
-                            },
-                            border: {
-                                color: '#000',
-                                width: 2
-                            }
-                        }
-                    } : {},
-                    elements: {
-                        bar: {
-                            borderSkipped: false,
-                            borderRadius: 0
-                        }
-                    },
-                    animation: {
-                        duration: isExport ? 0 : 1000,
-                        easing: 'easeOutQuart'
-                    }
-                }
-            };
-        }
-        
-        function createChart(labels, data, type, bulan, tahun, chartType) {
-            // Store current data for export
-            currentLabels = labels;
-            currentData = data;
-            
-            const title = type === 'desa' ? 
-                `DATA JUMLAH PEMERIKSAAN LABORATORIUM PERDESA BULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}` :
-                `DATA PEMERIKSAAN LABORATORIUM BULAN ${getNamaBulan(bulan).toUpperCase()} ${tahun}`;
-            
-            document.getElementById('grafik-info').textContent = title;
-            
-            const maxValue = Math.max(...data);
-            const average = Math.round(data.reduce((a, b) => a + b, 0) / data.length);
-            
-            document.getElementById('chartDataPoints').textContent = data.length;
-            document.getElementById('chartMaxValue').textContent = maxValue.toLocaleString();
-            document.getElementById('chartAverage').textContent = average.toLocaleString();
-            
-            // Only create export chart (no preview)
-            createExportChart(labels, data, type, bulan, tahun, chartType);
-            
-            appStats.chartsGenerated++;
-            saveData();
-        }
-        
-        function createExportChart(labels, data, type, bulan, tahun, chartType) {
-            const exportCanvas = document.getElementById('exportChart');
-            if (!exportCanvas) {
-                console.error('Export canvas not found');
-                return;
-            }
-            
-            exportCanvas.width = 1200;
-            exportCanvas.height = 800;
-            
-            const exportCtx = exportCanvas.getContext('2d');
-            if (!exportCtx) {
-                console.error('Could not get export canvas context');
-                return;
-            }
-            
-            if (exportChart) {
-                exportChart.destroy();
-            }
-            
-            exportChart = new Chart(exportCtx, getChartConfig(labels, data, type, bulan, tahun, chartType, true));
-        }
-        
-        function generateColors(count) {
-            const baseColors = [
-                'rgba(102, 126, 234, 0.8)',
-                'rgba(247, 147, 26, 0.8)',
-                'rgba(76, 201, 240, 0.8)',
-                'rgba(255, 107, 107, 0.8)',
-                'rgba(67, 233, 123, 0.8)',
-                'rgba(156, 136, 255, 0.8)',
-                'rgba(255, 159, 67, 0.8)',
-                'rgba(54, 162, 235, 0.8)',
-                'rgba(255, 99, 132, 0.8)',
-                'rgba(75, 192, 192, 0.8)'
-            ];
-            
-            const bg = [], border = [];
-            for (let i = 0; i < count; i++) {
-                const color = baseColors[i % baseColors.length];
-                bg.push(color);
-                border.push(color.replace('0.8', '1'));
-            }
-            
-            return { bg, border };
-        }
-        
-        // Excel export
-        function saveAsExcel(data, type, bulan, tahun) {
-            const ws = XLSX.utils.json_to_sheet(
-                Object.keys(data).map(key => ({
-                    [type === 'desa' ? 'Nama Desa' : 'Jenis Pemeriksaan']: key,
-                    'Jumlah': data[key]
-                }))
-            );
-            
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Data');
-            
-            XLSX.writeFile(wb, `data_${type}_${tahun}_${bulan}.xlsx`);
-        }
-        
-        // Notification system
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type} show`;
-            notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i> ${message}`;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => {
-                    if (document.body.contains(notification)) {
-                        document.body.removeChild(notification);
-                    }
-                }, 300);
-            }, 3000);
-        }
-        
-        // Event listeners
-        document.getElementById('selectDateDesaForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            currentBulan = document.getElementById('desaBulan').value;
-            currentTahun = document.getElementById('desaTahun').value;
-            
-            if (!currentBulan) {
-                showNotification('Pilih bulan terlebih dahulu!', 'error');
-                return;
-            }
-            
-            document.getElementById('current-bulan-desa').textContent = getNamaBulan(currentBulan);
-            document.getElementById('current-tahun-desa').textContent = currentTahun;
-            
-            fillDesaTable();
-            showPage('input-desa-page');
-        });
-        
-        document.getElementById('selectDatePemeriksaanForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            currentBulan = document.getElementById('pemeriksaanBulan').value;
-            currentTahun = document.getElementById('pemeriksaanTahun').value;
-            
-            if (!currentBulan) {
-                showNotification('Pilih bulan terlebih dahulu!', 'error');
-                return;
-            }
-            
-            document.getElementById('current-bulan-pemeriksaan').textContent = getNamaBulan(currentBulan);
-            document.getElementById('current-tahun-pemeriksaan').textContent = currentTahun;
-            
-            fillPemeriksaanTable();
-            showPage('input-pemeriksaan-page');
-        });
-        
-        document.getElementById('desaForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            const data = {};
-            let hasData = false;
-            
-            for (const [key, value] of formData.entries()) {
-                const numValue = parseInt(value) || 0;
-                data[key] = numValue;
-                if (numValue > 0) hasData = true;
-            }
-            
-            if (!hasData) {
-                showNotification('Masukkan minimal satu data!', 'error');
-                return;
-            }
-            
-            const bulanTahun = `${currentBulan}-${currentTahun}`;
-            storedData.desa[bulanTahun] = data;
-            appStats.totalRecords++;
-            saveData();
-            
-            saveAsExcel(data, 'desa', currentBulan, currentTahun);
-            showNotification('Data desa berhasil disimpan!', 'success');
-            showPage('main-page');
-        });
-        
-        document.getElementById('pemeriksaanForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            const data = {};
-            let hasData = false;
-            
-            for (const [key, value] of formData.entries()) {
-                const numValue = parseInt(value) || 0;
-                data[key] = numValue;
-                if (numValue > 0) hasData = true;
-            }
-            
-            if (!hasData) {
-                showNotification('Masukkan minimal satu data!', 'error');
-                return;
-            }
-            
-            const bulanTahun = `${currentBulan}-${currentTahun}`;
-            storedData.pemeriksaan[bulanTahun] = data;
-            appStats.totalRecords++;
-            saveData();
-            
-            saveAsExcel(data, 'pemeriksaan', currentBulan, currentTahun);
-            showNotification('Data lab berhasil disimpan!', 'success');
-            showPage('main-page');
-        });
-        
-        document.getElementById('generateForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            currentDataType = document.getElementById('dataType').value;
-            currentBulan = document.getElementById('generateBulan').value;
-            currentTahun = document.getElementById('generateTahun').value;
-            currentChartType = document.getElementById('chartType').value;
-            
-            if (!currentDataType || !currentBulan || !currentChartType) {
-                showNotification('Lengkapi semua field!', 'error');
-                return;
-            }
-            
-            const bulanTahun = `${currentBulan}-${currentTahun}`;
-            const data = storedData[currentDataType][bulanTahun];
-            
-            if (!data) {
-                showNotification('Data tidak ditemukan!', 'error');
-                return;
-            }
-            
-            const filteredData = Object.entries(data)
-                .filter(([key, value]) => value > 0)
-                .sort((a, b) => b[1] - a[1]);
-            
-            if (filteredData.length === 0) {
-                showNotification('Tidak ada data valid!', 'error');
-                return;
-            }
-            
-            const labels = filteredData.map(item => item[0]);
-            const values = filteredData.map(item => item[1]);
-            
-            createChart(labels, values, currentDataType, currentBulan, currentTahun, currentChartType);
-            showPage('grafik-page');
-            
-            showNotification('Chart berhasil dibuat!', 'success');
-        });
-        
-        document.getElementById('downloadBtn').addEventListener('click', function() {
-            if (exportChart) {
-                const exportCanvas = document.getElementById('exportChart');
-                
-                if (!exportCanvas) {
-                    showNotification('Chart belum dibuat!', 'error');
-                    return;
-                }
-                
-                // Create a temporary canvas with white background
-                const tempCanvas = document.createElement('canvas');
-                const tempCtx = tempCanvas.getContext('2d');
-                
-                tempCanvas.width = exportCanvas.width;
-                tempCanvas.height = exportCanvas.height;
-                
-                // Fill with white background
-                tempCtx.fillStyle = 'white';
-                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-                
-                // Draw the export chart on top
-                tempCtx.drawImage(exportCanvas, 0, 0);
-                
-                // Download the temp canvas
-                const link = document.createElement('a');
-                link.download = `chart_${currentDataType}_${currentTahun}_${currentBulan}.png`;
-                link.href = tempCanvas.toDataURL('image/png');
-                link.click();
-                showNotification('Chart berhasil didownload!', 'success');
-            } else {
-                showNotification('Chart belum dibuat! Generate chart terlebih dahulu.', 'error');
-            }
-        });
-        
-        document.getElementById('downloadExcelBtn').addEventListener('click', function() {
-            const bulanTahun = `${currentBulan}-${currentTahun}`;
-            const data = storedData[currentDataType][bulanTahun];
-            if (data) {
-                saveAsExcel(data, currentDataType, currentBulan, currentTahun);
-                showNotification('Excel berhasil didownload!', 'success');
-            } else {
-                showNotification('Data tidak tersedia!', 'error');
-            }
-        });
-        
-        // Initialize app on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            // Show loading screen first
-            showLoadingScreen();
-            
-            // Register Chart.js plugin
-            if (typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined') {
-                Chart.register(ChartDataLabels);
-                console.log('Chart.js and DataLabels plugin loaded successfully');
-            } else {
-                console.error('Chart.js or DataLabels plugin not loaded');
-            }
-            
-            // Initialize app after a delay
-            setTimeout(() => {
-                initializeApp();
-            }, 500);
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
+
 </html>
